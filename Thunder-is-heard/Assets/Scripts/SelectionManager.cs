@@ -46,15 +46,10 @@ public class SelectionManager : MonoBehaviour
             {
                 if (equalPose(currentElement.transform.position, clearedCell.cellPose) || PointOnLine(currentElement.transform.position, previousCell.cellPose, clearedCell.cellPose))
                 {
-
-                    Debug.Log("точка ЛЕЖИТ на векторе, утверждено главной проверкой");
-
                     Bucket[countForDelete] = currentElement;
                     countForDelete++;
                 }
-
             }
-            
         }
 
         DeleteFromRoute(Bucket);
@@ -66,65 +61,22 @@ public class SelectionManager : MonoBehaviour
         Vector3 pointPose = imagePose;
         pointPose.y = 0;
 
-        Debug.Log("equalPose === точка: x " + pointPose.x + "|| z " + pointPose.z + "|| y " + pointPose.y);
-        Debug.Log("equalPose === клетка: x " + cellPose.x + "|| z " + cellPose.z + "|| y " + cellPose.y);
-
-        if (pointPose == cellPose)
-        {
-
-            Debug.Log("точка ЛЕЖИТ на клетке, позиции совпадают");
-
-            return true;
-        }
-
-        Debug.Log("точка НЕ лежит на клетке, позиции не совпадают");
-
+        if (pointPose == cellPose) return true;
         return false;
     }
 
     private bool PointOnLine(Vector3 point, Vector3 startLine, Vector3 endLine)
     {
         Vector3 pointPose = point;
+        Vector3 routeImageOffset = (endLine - startLine) / 3;
+
         pointPose.y = 0;
 
-        Vector3 newRoutePart = endLine - startLine;
-        Vector3 routeImageOffset = newRoutePart / 3;
-
-        Vector3 startLineAndOffset = endLine - routeImageOffset;
-
-        Vector3 startLineAndOffset2 = endLine - routeImageOffset - routeImageOffset;
-
-
-        Debug.Log("ПЕРЕД точка: x " + pointPose.x + "|| z " + pointPose.z + "|| y " + pointPose.y);
-
-        Debug.Log("ПЕРЕД startline: x " + endLine.x + "|| z " + endLine.z + "|| y " + endLine.y);
-
-        Debug.Log("ПЕРЕД сдвиг: x " + routeImageOffset.x + "|| z " + routeImageOffset.z + "|| y " + routeImageOffset.y);
-
-        Debug.Log("ПЕРЕД startline+СДВИГ: x " + startLineAndOffset.x + "|| z " + startLineAndOffset.z + "|| y " + startLineAndOffset.y);
-
-        Debug.Log("startline+СДВИГx2: x " + startLineAndOffset2.x + "|| z " + startLineAndOffset2.z + "|| y " + startLineAndOffset2.y);
-
-        
-
-        if (Vector3.Distance(pointPose, startLineAndOffset) <= 0.1 || Vector3.Distance(pointPose, startLineAndOffset2) <= 0.1)
+        if (Vector3.Distance(pointPose, endLine - routeImageOffset) <= 0.1 || Vector3.Distance(pointPose, endLine - routeImageOffset - routeImageOffset) <= 0.1)
         {
-
-            Debug.Log("точка ЛЕЖИТ на векторе");
             return true;
         }
-
-
-        else
-        {
-            Debug.Log("точка НЕ лежит на векторе");
-
-
-            Debug.Log("Расстояние 1: " + Vector3.Distance(pointPose, startLineAndOffset));
-            Debug.Log("Расстояние 2: " + Vector3.Distance(pointPose, startLineAndOffset2));
-
-            return false;
-        }
+        return false;
     }
     
 
@@ -138,26 +90,19 @@ public class SelectionManager : MonoBehaviour
     }
     private void CellForRoute(Cell cell, Cell previousCell, bool overPoint)
     {
-        Debug.Log("В selection Manager принята клетка для маршрута");
-
         Vector3 imagePose = cell.cellPose;
         imagePose.y = 0.01f;
 
         if (!overPoint)
         {
-
             addToRoute(Instantiate(routeImage, imagePose, Quaternion.Euler(new Vector3(90f, 0f, 0f))));
-
-            
         }
         else
         {
             addToRoute(Instantiate(overRouteImage, imagePose, Quaternion.Euler(new Vector3(90f, 0f, 0f))));
-
         }
 
-        Vector3 newRoutePart = previousCell.cellPose - cell.cellPose;
-        Vector3 routeImageOffset = newRoutePart / 3;
+        Vector3 routeImageOffset = (previousCell.cellPose - cell.cellPose) / 3;
 
         addToRoute(
             Instantiate(routeImage, imagePose + routeImageOffset, Quaternion.Euler(new Vector3(90f, 0f, 0f))), 
@@ -195,7 +140,6 @@ public class SelectionManager : MonoBehaviour
     private void ChangeTurn(bool turn)
     {
         playerTurn = pass.enabled = turn;
-        
     }
 
     private void ChangeStatusTurn(bool status)
@@ -211,14 +155,10 @@ public class SelectionManager : MonoBehaviour
 
             if (_selection.CompareTag("FriendlyUnit") || _selection.CompareTag("EnemyUnit"))
             {
-
-
                 EventMaster.current.CellUnderUnitSelected(_selection.transform.position, defaultMaterial, false);
             }
             else
             {
-
-
                 var selectionRenderer = _selection.GetComponent<Renderer>();
                 selectionRenderer.material = defaultMaterial;
             }
@@ -237,14 +177,10 @@ public class SelectionManager : MonoBehaviour
                     break;
 
                 case "FriendlyUnit":
-                    if (idle)
+                    if (idle && playerTurn)
                     {
-                        if (playerTurn)
-                        {
-                            EventMaster.current.CellUnderUnitSelected(selection.transform.position, selectionMaterial, true);
-                            _selection = selection;
-                        }
-                        
+                        EventMaster.current.CellUnderUnitSelected(selection.transform.position, selectionMaterial, true);
+                        _selection = selection;
                     }
 
                     break;
@@ -259,8 +195,6 @@ public class SelectionManager : MonoBehaviour
                 case "EnemyBuild":
                     break;
             }
-            
-
         }
     }
 }

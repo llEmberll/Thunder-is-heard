@@ -83,20 +83,6 @@ public class GridTable : MonoBehaviour
         }
     }
 
-    private void showGrid(Vector3 pose)
-    {
-        Debug.Log("showGrid");
-
-        if (cellsData.ContainsKey(pose))
-        {
-            Debug.Log("cellData содержит клетку c координатами X - " + pose.x + "||| Z - " + pose.z);
-        }
-        else
-        {
-            Debug.Log("cellData не содержит клетку c координатами X - " + pose.x + "||| Z - " + pose.z);
-        }
-    } 
-
     private void updateCellTable(Dictionary<Vector3, Cell> newCellsData)
     {
         cellsData = newCellsData;

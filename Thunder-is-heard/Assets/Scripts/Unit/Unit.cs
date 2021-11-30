@@ -109,11 +109,11 @@ public class Unit : MonoBehaviour, IPointerClickHandler
 
     private Cell setNextPoint()
     {
-        bool setinNext = false;
+        bool setInNext = false;
         for (int index = 0; index < Route.Length; index++)
         {
             Cell point = Route[index];
-            if (setinNext)
+            if (setInNext)
             {
                 if (point != null)
                 {
@@ -125,7 +125,7 @@ public class Unit : MonoBehaviour, IPointerClickHandler
             
             if (Point == point)
             {
-                setinNext = true;
+                setInNext = true;
             }
         }
         return null;

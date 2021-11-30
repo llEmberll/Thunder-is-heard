@@ -77,7 +77,7 @@ public class UnitTable : MonoBehaviour
 
         else
         {
-            return enemies.Length;
+            return allies.Length;
         }
         
     }
