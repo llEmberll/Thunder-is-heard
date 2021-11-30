@@ -1,0 +1,369 @@
+fileFormatVersion: 2
+guid: ba130b36df0646a4587a79fb76cba204
+ModelImporter:
+  serializedVersion: 20200
+  internalIDToNameTable:
+  - first:
+      74: -6190453110779993422
+    second: tower|idle1
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.004
+    second: {fileID: 2100000, guid: 8b361a9486466bd48b2f029a338bf37d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.005
+    second: {fileID: 2100000, guid: 99d28a8eb2b3e194bb7a01c22c159c39, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.006
+    second: {fileID: 2100000, guid: d65617fedf05d24469e3e720929711aa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.007
+    second: {fileID: 2100000, guid: d9411d5de71aae94ea5c215d15c60461, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: back_cylinder
+    second: {fileID: 2100000, guid: 9dcb093317f109a46b64bdda67f8bf80, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: back_sheet_hide_radar
+    second: {fileID: 2100000, guid: 45b864b23254ef444b307a918a2ddf0e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: big_radar_handler
+    second: {fileID: 2100000, guid: fabbc8b6235d3434e951bcc8f87aeb1f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: big_radars
+    second: {fileID: 2100000, guid: 388b390d70a429241a196c7d9de307b8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: cener_tower_cylinder.002
+    second: {fileID: 2100000, guid: 40b831c24ea807246b61c8c3a9ffaea1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: center_tower_cylinder_base
+    second: {fileID: 2100000, guid: 9178b85fc73ed224d9a2b239b95e630c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: center_tower_cylinder_windows
+    second: {fileID: 2100000, guid: a8edd9cd4c5eeee44877f6b3996a6c85, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: center_wheel
+    second: {fileID: 2100000, guid: faf7952be763a734a9809ed92a2fbef3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: corpus
+    second: {fileID: 2100000, guid: a7ca86ec9474c4849b244a012dad518d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: corpus_base_color
+    second: {fileID: 2100000, guid: 09bd351f16d6b804889083b33125e95f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: corpus_luke
+    second: {fileID: 2100000, guid: 955339c69618ba345bbeedf5467f6bd0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: corpus_luke_handler
+    second: {fileID: 2100000, guid: 1e9a600f66a224040855ca8a873aeb8c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: corpus_side_handle_long
+    second: {fileID: 2100000, guid: 0abae97a749a4714ba44985c274fb8db, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: corpus_side_handle_short
+    second: {fileID: 2100000, guid: 15677f4a8cd475841ad0871884b6afc0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: front_hide_radar
+    second: {fileID: 2100000, guid: 95d52ec02e02e7f478e7132277cd660b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: front_ring_handle
+    second: {fileID: 2100000, guid: 38464e43cb8ea31409de0eef501b5dcf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: front_sheet_hide_radar
+    second: {fileID: 2100000, guid: 054f26151bd00ed4fb1e3de544a878f8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: front_wheel_sheet
+    second: {fileID: 2100000, guid: f5e8beaafc58da642bb300e623393b99, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: fuel can2
+    second: {fileID: 2100000, guid: f82592414b94a074588f25912e46b59c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: hide_radar_background
+    second: {fileID: 2100000, guid: 3f2677b7d8ccdfb42a3ea77f60f85215, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: iron_corpus
+    second: {fileID: 2100000, guid: b8386ff2f329caf459856918c0abc59e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: iron_handles
+    second: {fileID: 2100000, guid: 13ac1ddc86d57324eb1aba5b3c85f949, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: long_barrel2
+    second: {fileID: 2100000, guid: 1ef250f50c70fca49a4fa12611bdfb5b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: luke_handle_base
+    second: {fileID: 2100000, guid: 7889e718b5461164ab5cb2996f434d29, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: radar_back_circle
+    second: {fileID: 2100000, guid: 10c9e8ae6c7d7f84a95f6bfdf870172e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: radar_back_circle.001
+    second: {fileID: 2100000, guid: 8d1dcb198bdcdca4d828704af8511b2a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: sheet_barrel
+    second: {fileID: 2100000, guid: adbf357f76c1a7346b44b490cb77263c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: side_radar_frame
+    second: {fileID: 2100000, guid: 416adade9845621429381a248447dede, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: side_radar_sensors
+    second: {fileID: 2100000, guid: a199f8e69f5b1c9498e29e8455b11a20, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: side_radar_sphere
+    second: {fileID: 2100000, guid: e841299d774f6fb4bbf438db45d6fe56, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tower
+    second: {fileID: 2100000, guid: 194f57dc27bc5764aaa964f48fbee700, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tower_black_mate
+    second: {fileID: 2100000, guid: e561ea597f37ca640bc1dd23397b99b4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tower_handshake
+    second: {fileID: 2100000, guid: 6305c0f077d2a4a479082d4745c86274, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tower_luke
+    second: {fileID: 2100000, guid: ee7380d030f67364faaa2a96c57a7141, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tower_luke_arounders
+    second: {fileID: 2100000, guid: f5d4a4affdc5243408dc286e46c932ce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tower_mat_iron
+    second: {fileID: 2100000, guid: 1019b589b17bc6f4995626756d175ef6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tower_ring_ring
+    second: {fileID: 2100000, guid: 2a31bf80e5424a549a4cde7ac43832f8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: truck
+    second: {fileID: 2100000, guid: 37ebde504d4382348a2a310df4f7dc58, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tube
+    second: {fileID: 2100000, guid: 983aedd1a6d65774c8f90bb3aed1143b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tube_handlers
+    second: {fileID: 2100000, guid: 0bb62710ccc36e049a1fc5906b929837, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: tube_head
+    second: {fileID: 2100000, guid: a9419b9e425abee48bed52e8d29214f0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: wheel_up
+    second: {fileID: 2100000, guid: 660f3ba874c79c541b6fc1502995f829, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: wire
+    second: {fileID: 2100000, guid: 19035dc4af0bd364fa6ec53f7f297e59, type: 2}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: tower|idle1
+      takeName: tower|idle1
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 459
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
