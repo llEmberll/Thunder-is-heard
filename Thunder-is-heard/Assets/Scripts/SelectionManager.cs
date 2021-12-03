@@ -153,9 +153,9 @@ public class SelectionManager : MonoBehaviour
         if (_selection != null)
         {
 
-            if (_selection.CompareTag("FriendlyUnit") || _selection.CompareTag("EnemyUnit"))
+            if (_selection.CompareTag("FriendlyUnit") || _selection.CompareTag("EnemyUnit") || _selection.CompareTag("EnemyBuild"))
             {
-                EventMaster.current.CellUnderUnitSelected(_selection.transform.position, defaultMaterial, false);
+                EventMaster.current.ObjectSelected(_selection.transform.position, defaultMaterial, false);
             }
             else
             {
@@ -179,20 +179,24 @@ public class SelectionManager : MonoBehaviour
                 case "FriendlyUnit":
                     if (idle && playerTurn)
                     {
-                        EventMaster.current.CellUnderUnitSelected(selection.transform.position, selectionMaterial, true);
+                        EventMaster.current.ObjectSelected(selection.transform.position, selectionMaterial, true);
                         _selection = selection;
                     }
 
                     break;
                 case "EnemyUnit":
 
-                    EventMaster.current.CellUnderUnitSelected(selection.transform.position, selectionEnemyMaterial, true);
+                    EventMaster.current.ObjectSelected(selection.transform.position, selectionEnemyMaterial, true);
                     _selection = selection;
 
                     break;
                 case "FriendlyBuild":
                     break;
                 case "EnemyBuild":
+
+                    EventMaster.current.ObjectSelected(selection.transform.position, selectionEnemyMaterial, true);
+                    _selection = selection;
+
                     break;
             }
         }

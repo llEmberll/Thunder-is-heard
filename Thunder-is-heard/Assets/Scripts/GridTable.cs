@@ -40,14 +40,20 @@ public class GridTable : MonoBehaviour
     private void Start()
     {
         GenerateGrid();
-        EventMaster.current.SelectedCellUnderUnit += GridSelected;
+        //EventMaster.current.SelectedObject += GridSelected;
         EventMaster.current.CellRequestByPose += AnswerCellRequest;
         EventMaster.current.UnitDies += UnitDead;
+        EventMaster.current.BuildDestroed += BuildDestroy;
+    }
+
+    private void BuildDestroy(Build build, Cell[] occypiedCells)
+    {
+        updateStatuses();
     }
 
     private void UnitDead(Unit unit)
     {
-        
+        updateStatuses();
     }
 
     private void AnswerCellRequest(Vector3 pose)
@@ -56,21 +62,21 @@ public class GridTable : MonoBehaviour
         EventMaster.current.CellSending(cell);
     }
 
-    private void GridSelected(Vector3 pose, Material material, bool render)
-    {
-        Cell cell = cellsData[pose];
+    //private void GridSelected(Vector3 pose, Material material, bool render)
+    //{
+    //    Cell cell = cellsData[pose];
 
-        if (render)
-        {
-            cell.renderOn();
-        }
-        else
-        {
-            cell.renderOff();
-        }
+    //    if (render)
+    //    {
+    //        cell.renderOn();
+    //    }
+    //    else
+    //    {
+    //        cell.renderOff();
+    //    }
 
-        cell.ChangeMaterial(material);
-    }
+    //    cell.ChangeMaterial(material);
+    //}
 
 
     [ContextMenu("Delete Cells")]

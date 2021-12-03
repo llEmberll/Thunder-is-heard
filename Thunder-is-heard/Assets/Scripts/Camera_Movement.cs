@@ -24,7 +24,35 @@ public class Camera_Movement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Vector3 camPos = transform.position;
+        Camera cam = GetComponent<Camera>();
+
+        Vector3 camPos = cam.transform.position;
+
+        float mw = Input.GetAxis("Mouse ScrollWheel");
+
+        float minSize = 1.8f;
+        float maxSize = 4.2f;
+
+        if (mw > 0f)
+        {
+            if (cam.orthographicSize < maxSize)
+            {
+                cam.orthographicSize += Time.deltaTime * 25f;
+            }
+            else cam.orthographicSize = maxSize;
+
+
+        }
+        else if (mw < 0f)
+        {
+            if (cam.orthographicSize > minSize)
+            {
+                cam.orthographicSize -= Time.deltaTime * 25f;
+            }
+            else cam.orthographicSize = minSize;
+        }
+    
+
 
         if (Input.mousePosition.x <= 20)
         {

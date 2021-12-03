@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-
     [SerializeField] public Unit activeUnit;
 
     private GridTable gridTable;
@@ -14,14 +13,12 @@ public class GameManager : MonoBehaviour
     private Cell[] blastCells;
     private Cell[] moveRoute;
 
-    
     private bool idle;
 
     private int turnCounter;
     public bool playerTurn;
 
     private Dictionary<Cell, int> realMoveCells;
-
 
     // Start is called before the first frame update
     void Start()
@@ -30,13 +27,13 @@ public class GameManager : MonoBehaviour
         gridTable.turnOffCells();
 
         EventMaster.current.FightIsOver += FightIsOver;
-        EventMaster.current.UnitSelected += ClickedOnUnit;
+        EventMaster.current.UnitClicked += ClickedOnUnit;
+        EventMaster.current.BuildClicked += ClickedOnBuild;
         EventMaster.current.CompleteMove += MoveComplete;
         EventMaster.current.ClickedOnCell += clickedOnCell;
         EventMaster.current.UnitDies += UnitTakedDown;
         EventMaster.current.MouseOnCellEnter += MouseOnCellEnter;
-        EventMaster.current.SelectedCellUnderUnit += MouseOnUnit;
-
+        EventMaster.current.SelectedObject += MouseOnActiveUnit;
 
         activeUnit = null;
         idle = true;
@@ -45,10 +42,9 @@ public class GameManager : MonoBehaviour
 
         EventMaster.current.TurnChanging(playerTurn);
         EventMaster.current.StatusTurnChanging(idle);
-        
     }
 
-    private void MouseOnUnit(Vector3 pose, Material material, bool render)
+    private void MouseOnActiveUnit(Vector3 pose, Material material, bool render)
     {
         if (render && activeUnit != null && idle)
         {
@@ -76,11 +72,12 @@ public class GameManager : MonoBehaviour
                         moveRoute[0] = cell;
                         Cell previousRouteCell = gridTable.getCellInfoByPose(activeUnit.transform.position);
 
-                        EventMaster.current.SelectCellForRoute(cell, previousRouteCell, activeUnit.Mobility == countRouteCells++);
+                        countRouteCells = getRouteLength(moveRoute);
+
+                        EventMaster.current.SelectCellForRoute(cell, previousRouteCell, activeUnit.Mobility == countRouteCells);
                         return;
                     }
                 }
-
                 else
                 {
                     if (moveRoute.Contains(cell) && lastRouteCell != cell)
@@ -123,48 +120,73 @@ public class GameManager : MonoBehaviour
         moveRoute = new Cell[activeUnit.Mobility];
     }
 
-    private void updatePossibleMoveCells(Vector3 center, int range, int currentRange = 1)
+
+    private bool NeighbourCell(Vector3 pose, Vector3 cellPose)
     {
-        Cell[] newCells = new Cell[possibleMoveCells.Length];
-        if (currentRange > range)
+        if (Mathf.Max(Mathf.Abs((int)(pose.x - cellPose.x)), Mathf.Abs((int)(pose.z - cellPose.z))) == 1) return true;
+        return false;
+    }
+
+    private void updateMoveRange(Vector3 unitPose, int unitRange)
+    {
+        if (unitRange == 1)
         {
+            foreach (Cell cell in possibleMoveCells)
+            {
+                if (cell != null)
+                {
+                    realMoveCells.Add(cell, 1);
+                }
+            }
             return;
         }
-
-        for (int index = 0; index < possibleMoveCells.Length; index++)
+        else
         {
-            Cell currentCell = possibleMoveCells[index];
+            Cell[] firstCells = gridTable.getRange(unitPose, 1, false);
 
-            if (currentCell != null)
+            foreach (Cell firstStep in firstCells)
             {
-                int Xdiff = Mathf.Abs((int)(center.x - currentCell.cellPose.x));
-                int Zdiff = Mathf.Abs((int)(center.z - currentCell.cellPose.z));
-                int maxDiff = Mathf.Max(Xdiff, Zdiff);
-
-                if (maxDiff == 1)
+                if (firstStep != null)
                 {
-                    if (!realMoveCells.ContainsKey(currentCell))
-                    {
-                        realMoveCells.Add(currentCell, currentRange);
-                        newCells[index] = currentCell;
+                    realMoveCells.Add(firstStep, 1);
+                }
+            }
+            updateLevelsOfCells(unitRange, firstCells, 2);
+        }
+    }
 
-                        possibleMoveCells[index] = null;
-                        
+
+    private void updateLevelsOfCells(int range, Cell[] previousCells, int currentRange)
+    {
+        Cell[] newCells = new Cell[8 * currentRange];
+        int newCellsIndex = 0;
+
+        for (int index = 0; index < previousCells.Length; index++)
+        {
+            Cell currentPreviousCell = previousCells[index];
+            if (currentPreviousCell != null)
+            {
+                for (int index2 = 0; index2 < possibleMoveCells.Length; index2++)
+                {
+                    Cell currentPossibleCell = possibleMoveCells[index2];
+                    if (currentPossibleCell != null)
+                    {
+                        if (NeighbourCell(currentPreviousCell.cellPose, currentPossibleCell.cellPose))
+                        {
+                            if (!realMoveCells.ContainsKey(currentPossibleCell))
+                            {
+                                realMoveCells.Add(currentPossibleCell, currentRange);
+                                newCells[newCellsIndex] = currentPossibleCell;
+                                newCellsIndex++;
+                            }
+                            possibleMoveCells[index2] = null;
+                        }
                     }
                 }
             }
         }
-
-        for (int index = 0; index < newCells.Length; index++)
-        {
-            Cell currentCell = newCells[index];
-            if (currentCell != null)
-            {
-                updatePossibleMoveCells(currentCell.cellPose, range, currentRange + 1);
-            }
-        }
-        
-
+        if (currentRange < range) updateLevelsOfCells(range, newCells, currentRange + 1);
+        return;
     }
 
     private void DeleteAllRouteAfterValue(Cell cell)
@@ -176,21 +198,24 @@ public class GameManager : MonoBehaviour
         for (int index = 0; index < moveRoute.Length; index++)
         {
             Cell currentCell = moveRoute[index];
-            if (!cut)
+
+            if (currentCell != null)
             {
-                if (currentCell != null)
+                if (!cut)
                 {
                     newRoute[index] = currentCell;
                     if (cell == currentCell)
                     {
                         cut = true;
                     }
+
+                }
+                else
+                {
+                    EventMaster.current.ClearingRouteCell(currentCell, moveRoute[index - 1]);
                 }
             }
-            else
-            {
-                EventMaster.current.ClearingRouteCell(currentCell, moveRoute[index - 1]);
-            }
+                
         }
 
         moveRoute = newRoute;
@@ -313,13 +338,25 @@ public class GameManager : MonoBehaviour
     private void updateActiveCells(Vector3 center, int moveRadius, int attackRadius)
     {
         possibleMoveCells = gridTable.getRange(center, moveRadius, false);
-
+        blastCells = gridTable.getRange(center, attackRadius, true);
         realMoveCells = new Dictionary<Cell, int>(possibleMoveCells.Length);
 
-        updatePossibleMoveCells(center, moveRadius);
 
-        blastCells = gridTable.getRange(center, attackRadius, true);
-        
+        foreach (Cell posCell in possibleMoveCells)
+        {
+            if (posCell != null)
+            {
+                Debug.Log("Теоретически Возможная клетка: " + posCell.cellPose.x + "|| " + posCell.cellPose.z);
+            }
+            else
+            {
+                Debug.Log("Теоретически Возможная клетка равна null");
+            }
+
+        }
+
+        updateMoveRange(center, moveRadius);
+
     }
 
     public void showActiveCells()
@@ -341,9 +378,22 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
-    private bool canAttack(Cell cell)
+    private bool canAttack(params Cell[] cells)
     {
-        return blastCells.Contains(cell);
+        foreach (Cell cell in cells)
+        {
+            if (blastCells.Contains(cell))
+            {
+                Debug.Log("True!");
+
+                Debug.Log("Занятая зданием клетка: " + cell.cellPose.x + "|| " + cell.cellPose.z);
+
+
+
+                return true;
+            }
+        }
+        return false;
     }
 
     private void moveUnit(Cell[] route)
@@ -353,14 +403,14 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("Приказ о передвижении отправлен!");
 
-        EventMaster.current.UnitMovingOnRoute(activeUnit.id, route);
+        EventMaster.current.UnitMovingOnRoute(activeUnit.transform.position, route);
         hideActiveCells();
 
         ClearRoute();
 
     }
 
-    private void tryAttack(Unit unit)
+    private void tryAttackUnit(Unit unit)
     {
         Debug.Log("Активный юнит есть");
 
@@ -370,14 +420,51 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("Можно атаковать");
 
-            EventMaster.current.UnitAttacking(activeUnit, unit, activeUnit.Damage);
+            EventMaster.current.UnitAttackingUnit(activeUnit, unit, activeUnit.Damage);
+
+            hideActiveCells();
+
+            ClearRoute();
+
+            nextTurn();
+
             return;
         }
         
         Debug.Log("Юниту не хватает дистанции для атаки");
     }
 
-    public void ClickedOnUnit(Unit unit)
+
+    private void ClickedOnBuild(Build build, Cell[] occypiedCells)
+    {
+
+        foreach (Cell ocCell in occypiedCells)
+        {
+            Debug.Log("Занятая зданием клетка: " + ocCell.cellPose.x + "|| " + ocCell.cellPose.z);
+        }
+
+        Debug.Log("Здание принято");
+        if (idle && activeUnit != null && build.CompareTag("EnemyBuild"))
+        {
+            Debug.Log("Здание может являться целью");
+            if (canAttack(occypiedCells))
+            {
+                Debug.Log("Здание может быть атаковано");
+
+                EventMaster.current.UnitAttackingBuild(activeUnit, build, activeUnit.Damage);
+
+                hideActiveCells();
+
+                ClearRoute();
+
+                nextTurn();
+
+                Debug.Log("Ивент об атаке создан");
+            }
+        }
+    }
+
+    private void ClickedOnUnit(Unit unit)
     {
         Debug.Log("Юнит принят");
 
@@ -398,7 +485,7 @@ public class GameManager : MonoBehaviour
 
                 if (activeUnit != null)
                 {
-                    tryAttack(unit);
+                    tryAttackUnit(unit);
                     return;
 
                 }

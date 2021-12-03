@@ -18,8 +18,8 @@ public class Cell : MonoBehaviour, IPointerClickHandler
 
     public void Start()
     {
-        EventMaster.current.UnitDies += UnitDead;
-        EventMaster.current.SelectedCellUnderUnit += UnitOnCellSelected;
+        EventMaster.current.UnitDies += ObjectDestroyed;
+        //EventMaster.current.SelectedObject += ObjectOnCellSelected;
         
 
         this.cellPose = transform.position;
@@ -27,30 +27,30 @@ public class Cell : MonoBehaviour, IPointerClickHandler
         this.type = 0;
     }
 
-    private void UnitOnCellSelected(Vector3 pose, Material material, bool nowSelect)
-    {
-        if (cellPose == pose)
-        {
-            if (nowSelect)
-            {
-                renderOn();
-                ChangeMaterial(material);
-            }
-            else
-            {
-                if(_meshRenderer != null)
-                {
-                    ChangeMaterial(material);
-                    renderOff();
-                    return;
-                }
+    //private void ObjectOnCellSelected(Vector3 pose, Material material, bool nowSelect)
+    //{
+    //    if (cellPose == pose)
+    //    {
+    //        if (nowSelect)
+    //        {
+    //            renderOn();
+    //            ChangeMaterial(material);
+    //        }
+    //        else
+    //        {
+    //            if(_meshRenderer != null)
+    //            {
+    //                ChangeMaterial(material);
+    //                renderOff();
+    //                return;
+    //            }
 
-            }
+    //        }
             
-        }
-    }
+    //    }
+    //}
 
-    private void UnitDead(Unit unit)
+    private void ObjectDestroyed(Unit unit)
     {
         if (cellPose == unit.transform.position)
         {
@@ -65,7 +65,11 @@ public class Cell : MonoBehaviour, IPointerClickHandler
         {
             if (col.tag != "Cell" && col.tag != "Terrain")
             {
-                Debug.Log(" ÎÂÚÍ‡ «¿Õﬂ“¿!");
+                if (col.tag == "EnemyBuild" || col.tag == "FriendlyBuild")
+                {
+                    EventMaster.current.ObjectFindedOnCell(col.GetComponent<Build>().id, GetComponent<Cell>());
+                }
+
                 return true;
             }
         }
@@ -161,11 +165,12 @@ public class Cell : MonoBehaviour, IPointerClickHandler
         {
             _meshRenderer.enabled = true;
         }
+
+      
         
     }
 
-    
-
+   
     private void OnMouseEnter()
     {
         ChangeColor(_hoverColor);

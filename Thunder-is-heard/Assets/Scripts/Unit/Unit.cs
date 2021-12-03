@@ -15,6 +15,8 @@ public class Unit : MonoBehaviour, IPointerClickHandler
     private Cell[] Route;
     private bool mustMove;
 
+    [SerializeField] private int id;
+
     [SerializeField] private Transform model;
 
     [SerializeField] private Text Name;
@@ -23,11 +25,11 @@ public class Unit : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Text DamageCount;
     [SerializeField] private Text HealthCount;
     [SerializeField] private Canvas DistanceLine;
-
+    [SerializeField] private SpriteRenderer selector;
 
     private Animator animator;
 
-    public int id;
+    
 
     public Unit(string unitName, int health, int damage, int mobility, int range, float realSpeed)
     {
@@ -46,10 +48,11 @@ public class Unit : MonoBehaviour, IPointerClickHandler
         
         animator = model.GetComponent<Animator>();
         EventMaster.current.UnitMoveOnRoute += moveOnRoute;
-        EventMaster.current.UnitAttacks += SomebodyAttacks;
-        EventMaster.current.SelectedCellUnderUnit += UnitSelected;
+        EventMaster.current.UnitAttacksUnit += SomebodyAttacks;
+        EventMaster.current.SelectedObject += ObjectSelected;
+        EventMaster.current.UnitAttacksBuild += BuildHasBeenAttack;
 
-        UI.enabled = false;
+        UI.enabled = selector.enabled = false;
 
         Name.text = UnitName;
         HealthBar.minValue = 0;
@@ -80,9 +83,17 @@ public class Unit : MonoBehaviour, IPointerClickHandler
         DamageCount.text = newDamage.ToString();
     }
 
-    private void UnitSelected(Vector3 pose, Material material, bool nowSelect)
+    private void ObjectSelected(Vector3 pose, Material material, bool nowSelect)
     {
-        if (transform.position == pose) UI.enabled = DistanceLine.enabled = nowSelect;
+        if (transform.position == pose) UI.enabled = DistanceLine.enabled = selector.enabled = nowSelect;
+    }
+
+    private void BuildHasBeenAttack(Unit attacker, Build build, int damage)
+    {
+        if (attacker == GetComponent<Unit>())
+        {
+            rotateToTarget(build.transform.position);
+        }
     }
 
     private void SomebodyAttacks(Unit attacker, Unit defender, int damage)
@@ -104,7 +115,7 @@ public class Unit : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        EventMaster.current.UnitSelecting(this.GetComponent<Unit>());
+        EventMaster.current.UnitClick(this.GetComponent<Unit>());
     }
 
     private Cell setNextPoint()
@@ -131,9 +142,9 @@ public class Unit : MonoBehaviour, IPointerClickHandler
         return null;
     }
 
-    private void moveOnRoute(int unitId, Cell[] route)
+    private void moveOnRoute(Vector3 unitPose, Cell[] route)
     {
-        if (unitId == id)
+        if (transform.position == unitPose)
         {
             Route = route;
             occypyCell(Route[0]);
@@ -180,8 +191,9 @@ public class Unit : MonoBehaviour, IPointerClickHandler
         Debug.Log("Юнит выходит из боя!");
 
         EventMaster.current.UnitMoveOnRoute -= moveOnRoute;
-        EventMaster.current.UnitAttacks -= SomebodyAttacks;
-        EventMaster.current.SelectedCellUnderUnit -= UnitSelected;
+        EventMaster.current.UnitAttacksUnit -= SomebodyAttacks;
+        EventMaster.current.SelectedObject -= ObjectSelected;
+        EventMaster.current.UnitAttacksBuild -= BuildHasBeenAttack;
 
         EventMaster.current.UnitDying(this.GetComponent<Unit>());
 
@@ -197,7 +209,6 @@ public class Unit : MonoBehaviour, IPointerClickHandler
             if ((Vector3.Distance(pointPosition, transform.position)) > 0)
             {
                 transform.position = Vector3.MoveTowards(transform.position, pointPosition, RealSpeed * Time.fixedDeltaTime);
-
             } 
             else
             {

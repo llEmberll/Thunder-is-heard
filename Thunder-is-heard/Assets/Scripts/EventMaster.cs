@@ -22,6 +22,16 @@ public class EventMaster : MonoBehaviour
         }
     }
 
+    public event Action<Build, Cell[]> BuildDestroed;
+    public void BuildDestroing(Build build, Cell[] occypiedCells)
+    {
+        if (BuildDestroed != null)
+        {
+            BuildDestroed(build, occypiedCells);
+        }
+    }
+
+
     public event Action<bool> FightIsOver;
     public void FightFinishing(bool playerWon)
     {
@@ -50,21 +60,40 @@ public class EventMaster : MonoBehaviour
     }
 
 
-    public event Action<Unit> UnitSelected;
-    public void UnitSelecting(Unit unit)
+    public event Action<Unit> UnitClicked;
+    public void UnitClick(Unit unit)
     {
-        if (UnitSelected != null)
+        if (UnitClicked != null)
         {
-            UnitSelected(unit);
+            UnitClicked(unit);
         }
     }
 
-    public event Action<Vector3, Material, bool> SelectedCellUnderUnit;
-    public void CellUnderUnitSelected(Vector3 pose, Material material, bool render)
+    public event Action<Build, Cell[]> BuildClicked;
+    public void BuildClick(Build build, Cell[] occypiedCells)
     {
-        if (SelectedCellUnderUnit != null)
+        if (BuildClicked != null)
         {
-            SelectedCellUnderUnit(pose, material, render);
+            BuildClicked(build, occypiedCells);
+        }
+    }
+
+    public event Action<int, Cell> FindObjectOnCell;
+    public void ObjectFindedOnCell(int objId, Cell cell)
+    {
+        if (FindObjectOnCell != null)
+        {
+            FindObjectOnCell(objId, cell);
+        }
+    }
+
+
+    public event Action<Vector3, Material, bool> SelectedObject;
+    public void ObjectSelected(Vector3 pose, Material material, bool render)
+    {
+        if (SelectedObject != null)
+        {
+            SelectedObject(pose, material, render);
         }
     }
 
@@ -97,12 +126,12 @@ public class EventMaster : MonoBehaviour
     }
 
 
-    public event Action<int, Cell[]> UnitMoveOnRoute;
-    public void UnitMovingOnRoute (int UnitId, Cell[] route)
+    public event Action<Vector3, Cell[]> UnitMoveOnRoute;
+    public void UnitMovingOnRoute (Vector3 UnitPose, Cell[] route)
     {
         if (UnitMoveOnRoute != null)
         {
-            UnitMoveOnRoute(UnitId, route);
+            UnitMoveOnRoute(UnitPose, route);
         }
     }
 
@@ -153,14 +182,30 @@ public class EventMaster : MonoBehaviour
     }
 
 
-    public event Action<Unit, Unit, int> UnitAttacks;
-    public void UnitAttacking(Unit Attacker, Unit Defender, int Damage)
+    public event Action<Unit, Unit, int> UnitAttacksUnit;
+    public void UnitAttackingUnit(Unit Attacker, Unit Defender, int Damage)
     {
-        if (UnitAttacks != null)
+        if (UnitAttacksUnit != null)
         {
-            UnitAttacks(Attacker, Defender, Damage);
+            UnitAttacksUnit(Attacker, Defender, Damage);
         }
     }
+
+    public event Action<Unit, Build, int> UnitAttacksBuild;
+    public void UnitAttackingBuild(Unit Attacker, Build Defender, int Damage)
+    {
+        Debug.Log("В ивентах");
+
+        if (UnitAttacksBuild != null)
+        {
+            Debug.Log("В ивентах: ивент не null!");
+
+            Debug.Log("Урон будет - " + Damage);
+
+            UnitAttacksBuild(Attacker, Defender, Damage);
+        }
+    }
+
 
 
     public event Action CompleteMove;

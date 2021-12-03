@@ -16,6 +16,7 @@ TagManager:
   - EventMaster
   - Model
   - Route
+  - EnemyBuild
   layers:
   - Default
   - TransparentFX
