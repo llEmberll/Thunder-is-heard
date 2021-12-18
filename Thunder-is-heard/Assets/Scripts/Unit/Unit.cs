@@ -2,90 +2,56 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
-public class Unit : MonoBehaviour, IPointerClickHandler
+public class Unit : MonoBehaviour
 {
-    public int Health, Damage, Mobility, Range;
-    public string UnitName;
-    public float RealSpeed;
-    public int type;
+    public int health, maxHealth,  damage, mobility, distance;
+    public string unitName;
+    public float realSpeed;
+    public int type, unitId;
 
-    private Cell Point;
-    private Cell[] Route;
+    private Cell point;
+    private Cell[] route;
     private bool mustMove;
 
-    [SerializeField] private int id;
+    [SerializeField] public Transform model;
 
-    [SerializeField] private Transform model;
-
-    [SerializeField] private Text Name;
-    [SerializeField] private Canvas UI;
-    [SerializeField] private Slider HealthBar;
-    [SerializeField] private Text DamageCount;
-    [SerializeField] private Text HealthCount;
-    [SerializeField] private Canvas DistanceLine;
-    [SerializeField] private SpriteRenderer selector;
-
-    private Animator animator;
+    public Animator animator;
 
     
 
-    public Unit(string unitName, int health, int damage, int mobility, int range, float realSpeed)
+    public Unit(string UnitName, int Id, int MaxHealth, int Damage, int Distance, int Mobility, float RealSpeed, Transform Model)
     {
-        this.UnitName = unitName;
-        this.Health = health;
-        this.Damage = damage;
-        this.Mobility = mobility;
-        this.Range = range;
-        this.RealSpeed = realSpeed;
+        this.unitName = UnitName;
+        this.unitId = Id;
+        this.maxHealth = MaxHealth;
+        this.damage = Damage;
+        this.distance = Distance;
+        this.mobility = Mobility;
+        this.realSpeed = RealSpeed;
+        this.model = Model;
         this.type = 0;
+
     }
 
+    private void Awake()
+    {
+        EventMaster.current.UnitMoveOnRoute += moveOnRoute;
+        EventMaster.current.UnitAttacksUnit += SomebodyAttacks;
+        EventMaster.current.UnitAttacksBuild += BuildHasBeenAttack;
+
+        
+    }
 
     private void Start()
     {
-        
+        health = maxHealth;
+
         animator = model.GetComponent<Animator>();
-        EventMaster.current.UnitMoveOnRoute += moveOnRoute;
-        EventMaster.current.UnitAttacksUnit += SomebodyAttacks;
-        EventMaster.current.SelectedObject += ObjectSelected;
-        EventMaster.current.UnitAttacksBuild += BuildHasBeenAttack;
 
-        UI.enabled = selector.enabled = false;
+        Debug.Log("unit посылает ивент о его появлении");
 
-        Name.text = UnitName;
-        HealthBar.minValue = 0;
-        HealthBar.maxValue = Health;
-        UpdateHealthBar(Health);
-        UpdateAttributes(Health, Damage);
-
-
-        float RangeSize = 800 + (1600 * Range);
-        DistanceLine.GetComponent<RectTransform>().sizeDelta = new Vector2(RangeSize, RangeSize);
-        DistanceLine.enabled = false;
-    }
-
-    private void UpdateHealthBar(int newValue)
-    {
-        if (newValue < 1)
-        {
-            HealthBar.value = HealthBar.minValue;
-            return;
-        }
-        HealthBar.value = newValue;
-        
-    }
-
-    private void UpdateAttributes(int newHealth, int newDamage)
-    {
-        HealthCount.text = newHealth.ToString();
-        DamageCount.text = newDamage.ToString();
-    }
-
-    private void ObjectSelected(Vector3 pose, Material material, bool nowSelect)
-    {
-        if (transform.position == pose) UI.enabled = DistanceLine.enabled = selector.enabled = nowSelect;
+        EventMaster.current.SceneAddUnit(GetComponent<Unit>(), this.CompareTag("EnemyUnit"));
     }
 
     private void BuildHasBeenAttack(Unit attacker, Build build, int damage)
@@ -113,28 +79,23 @@ public class Unit : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        EventMaster.current.UnitClick(this.GetComponent<Unit>());
-    }
-
     private Cell setNextPoint()
     {
         bool setInNext = false;
-        for (int index = 0; index < Route.Length; index++)
+        for (int index = 0; index < route.Length; index++)
         {
-            Cell point = Route[index];
+            Cell currentPoint = route[index];
             if (setInNext)
             {
-                if (point != null)
+                if (currentPoint != null)
                 {
-                    return point;
+                    return currentPoint;
                 }
                 return null;
 
             }
             
-            if (Point == point)
+            if (point == currentPoint)
             {
                 setInNext = true;
             }
@@ -142,12 +103,13 @@ public class Unit : MonoBehaviour, IPointerClickHandler
         return null;
     }
 
-    private void moveOnRoute(Vector3 unitPose, Cell[] route)
+    private void moveOnRoute(Vector3 unitPose, Cell[] newRoute)
     {
+
         if (transform.position == unitPose)
         {
-            Route = route;
-            occypyCell(Route[0]);
+            route = newRoute;
+            occypyCell(route[0]);
         }
     }
 
@@ -159,8 +121,11 @@ public class Unit : MonoBehaviour, IPointerClickHandler
     private void occypyCell(Cell cell)
     {
         Debug.Log("Приказ о передвижении принят юнитом!");
-        Point = cell;
-        rotateToTarget(Point.transform.position);
+        point = cell;
+        rotateToTarget(point.transform.position);
+
+        EventMaster.current.StartUnitMove(GetComponent<Unit>(), unitId, this.transform.position);
+
         mustMove = true;
         Debug.Log("Началось движение");
     }
@@ -176,9 +141,8 @@ public class Unit : MonoBehaviour, IPointerClickHandler
     {
         Debug.Log("Юнит получил урон");
 
-        Health -= Damage;
-        UpdateHealthBar(Health);
-        if (Health <= 0)
+        health -= Damage;
+        if (health <= 0)
         {
             Debug.Log("Юнит больше не имеет здоровья");
             Die();
@@ -192,7 +156,6 @@ public class Unit : MonoBehaviour, IPointerClickHandler
 
         EventMaster.current.UnitMoveOnRoute -= moveOnRoute;
         EventMaster.current.UnitAttacksUnit -= SomebodyAttacks;
-        EventMaster.current.SelectedObject -= ObjectSelected;
         EventMaster.current.UnitAttacksBuild -= BuildHasBeenAttack;
 
         EventMaster.current.UnitDying(this.GetComponent<Unit>());
@@ -205,10 +168,10 @@ public class Unit : MonoBehaviour, IPointerClickHandler
     {
         if (mustMove == true)
         {
-            Vector3 pointPosition = Point.cellPose;
+            Vector3 pointPosition = point.cellPose;
             if ((Vector3.Distance(pointPosition, transform.position)) > 0)
             {
-                transform.position = Vector3.MoveTowards(transform.position, pointPosition, RealSpeed * Time.fixedDeltaTime);
+                transform.position = Vector3.MoveTowards(transform.position, pointPosition, realSpeed * Time.fixedDeltaTime);
             } 
             else
             {
@@ -221,12 +184,14 @@ public class Unit : MonoBehaviour, IPointerClickHandler
     {
         Debug.Log("Юнит прибыл на точку");
 
+        
+
         Cell nextPoint = setNextPoint();
         if (nextPoint == null)
         {
             mustMove = false;
-            
-            EventMaster.current.movingComplete();
+
+            EventMaster.current.UnitmovingComplete(GetComponent<Unit>(), unitId, this.transform.position);
 
             Debug.Log("must move: " + mustMove);
             return;

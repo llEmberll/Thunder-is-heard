@@ -6,30 +6,29 @@ using UnityEngine.UI;
 
 public class ResourceController : MonoBehaviour
 {
-    public Text resourceText;
+    [SerializeField] private int steelCount;
+    [SerializeField] private int maxSteelCount;
 
-    public string money;
-    public string steel;
-    public string oil;
-    public string command_resource;
-    public string count_separator;
-    public string value_separator;
+    [SerializeField] private int oilCount;
+    [SerializeField] private int maxOilCount;
 
-    public int money_count;
-    public int steel_count;
-    public int oil_count;
-    public int command_resource_count;
-    
+    [SerializeField] private int moneyCount; 
+
+    public Text money;
+    public Text steel;
+    public Text oil;
 
 
     // Update is called once per frame
-    void Update()
+    private void Start()
     {
         UpdateResources();
     }
 
     private void UpdateResources()
     {
-        resourceText.text = money + count_separator + money_count + value_separator + steel + count_separator + steel_count + value_separator + oil + count_separator + oil_count + value_separator + command_resource + count_separator + command_resource_count;
+        money.text = $"{moneyCount}";
+        steel.text = $"{steelCount}/{maxSteelCount}";
+        oil.text = $"{oilCount}/{maxOilCount}";
     }
 }

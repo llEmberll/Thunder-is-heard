@@ -17,6 +17,13 @@ TagManager:
   - Model
   - Route
   - EnemyBuild
+  - PlayerData
+  - Prefabs
+  - LandableUnit
+  - Indestructibles
+  - Destructible
+  - FriendlyBuild
+  - Preview
   layers:
   - Default
   - TransparentFX

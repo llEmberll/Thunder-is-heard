@@ -2,28 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
-public class Build : MonoBehaviour, IPointerClickHandler
+public class Build : MonoBehaviour
 {
-    [SerializeField] public int Health, id;
-    [SerializeField] private string buildName;
+    [SerializeField] public int maxHealth, health, id, typeId;
+    [SerializeField] public string buildName;
 
-    [SerializeField] private Text Name;
-    [SerializeField] private Canvas UI;
-    [SerializeField] private Slider HealthBar;
-    [SerializeField] private Text HealthCount;
+    [SerializeField] public int sizeX;
+    [SerializeField] public int sizeZ;
+    public Vector3 center;
 
-    [SerializeField] private SpriteRenderer selector;
+    public Vector3[] occypiedPoses;
 
-    [SerializeField] private int sizeX;
-    [SerializeField] private int sizeZ;
 
-    private Cell[] occypiedCells;
-
-    public Build(int healthCount, int Id, int SizeX, int SizeZ, string Name)
+    public Build(int TypeId, int healthCount, int Id, int SizeX, int SizeZ, string Name)
     {
-        this.Health = healthCount;
+        this.typeId = TypeId;
+        this.maxHealth = healthCount;
         this.id = Id;
         this.sizeX = SizeX;
         this.sizeZ = SizeZ;
@@ -31,35 +26,22 @@ public class Build : MonoBehaviour, IPointerClickHandler
         
     }
 
-    private void Start()
+    private void Awake()
     {
-        EventMaster.current.SelectedObject += ObjectSelected;
-        EventMaster.current.FindObjectOnCell += ObjectFinded;
         EventMaster.current.UnitAttacksBuild += BuildHasBeenAttack;
 
-        ClearOccypiedCells();
-        UI.enabled = selector.enabled = false;
-        Name.text = buildName;
-        HealthBar.minValue = 0;
-        HealthBar.maxValue = Health;
-        UpdateHealthBar(Health);
-        UpdateAttributes(Health);
+        health = maxHealth;
+
+        
     }
 
-    private void UpdateHealthBar(int newValue)
+    private void Start()
     {
-        if (newValue < 1)
-        {
-            HealthBar.value = HealthBar.minValue;
-            return;
-        }
-        HealthBar.value = newValue;
+        UpdateOccypiedCells();
 
-    }
+        SendNewOccypyPoses();
 
-    private void UpdateAttributes(int newHealth)
-    {
-        HealthCount.text = newHealth.ToString();
+        EventMaster.current.SceneAddBuild(GetComponent<Build>(), this.CompareTag("EnemyBuild"));
     }
 
     private void BuildHasBeenAttack(Unit attacker, Build build, int damage)
@@ -74,56 +56,38 @@ public class Build : MonoBehaviour, IPointerClickHandler
         }
     }
 
-
-    private void ClearOccypiedCells()
+    private void SendNewOccypyPoses()
     {
-        occypiedCells = new Cell[sizeX * sizeZ];
+        foreach (Vector3 Pose in occypiedPoses)
+        {
+            EventMaster.current.SendNewBuildOccypyPose(this.gameObject, Pose);
+        }
     }
 
-    private bool IsExistInCells(Cell cell)
+    private void UpdateOccypiedCells()
     {
-        foreach (Cell existCell in occypiedCells)
+        occypiedPoses = new Vector3[sizeX * sizeZ];
+
+        Vector3 buildStartPose = transform.position;
+
+        int index = 0;
+
+        Vector3 bounds = buildStartPose + transform.right * sizeX + transform.forward * sizeZ;
+        int maxX = (int)bounds.x;
+        int maxZ = (int)bounds.z;
+
+        center = new Vector3((transform.position.x + maxX - 1) /2, 0, (transform.position.z + maxZ - 1) /2);
+
+        for (int x = (int)buildStartPose.x; x < maxX; x++)
         {
-            if (existCell == cell)
+            for (int z = (int)buildStartPose.z; z < maxZ; z++)
             {
-                return true;
+                occypiedPoses[index] = transform.right * x + transform.forward * z;
+                index++;
             }
         }
-        return false;
     }
 
-    private void ObjectFinded(int objId, Cell cell)
-    {
-        if (id == objId)
-        {
-            if (!IsExistInCells(cell))
-            {
-                AddCellToOccypied(cell);
-            }
-        }
-    }
-
-
-    private void AddCellToOccypied(Cell cell)
-    {
-        for (int index = 0; index < occypiedCells.Length; index++)
-        {
-
-            if (occypiedCells[index] == null)
-            {
-                occypiedCells[index] = cell;
-                break;
-
-            } 
-        }
-    }
-
-
-    private void ObjectSelected(Vector3 pose, Material material, bool nowSelect)
-    {
-        if (transform.position == pose) UI.enabled = selector.enabled = nowSelect;
-
-    }
 
     private void getDamage(int Damage)
     {
@@ -131,9 +95,8 @@ public class Build : MonoBehaviour, IPointerClickHandler
 
         Debug.Log("урон - " + Damage);
 
-        Health -= Damage;
-        UpdateHealthBar(Health);
-        if (Health <= 0)
+        health -= Damage;
+        if (health <= 0)
         {
             Debug.Log("Постройка больше не имеет здоровья");
             Die();
@@ -145,19 +108,11 @@ public class Build : MonoBehaviour, IPointerClickHandler
     {
         Debug.Log("Постройка разрушается!");
 
-        EventMaster.current.BuildDestroing(this.GetComponent<Build>(), occypiedCells);
+        EventMaster.current.BuildDestroing(this.GetComponent<Build>(), occypiedPoses);
 
         Destroy(this.gameObject);
-
-        EventMaster.current.SelectedObject -= ObjectSelected;
-        EventMaster.current.FindObjectOnCell -= ObjectFinded;
         EventMaster.current.UnitAttacksBuild -= BuildHasBeenAttack;
 
-    }
 
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        EventMaster.current.BuildClick(this.GetComponent<Build>(), occypiedCells);
     }
-
 }

@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -16,204 +14,226 @@ public class EventMaster : MonoBehaviour
     public event Action<Unit> UnitDies;
     public void UnitDying(Unit unit)
     {
-        if (UnitDies != null)
-        {
-            UnitDies(unit);
-        }
+        UnitDies?.Invoke(unit);
     }
 
-    public event Action<Build, Cell[]> BuildDestroed;
-    public void BuildDestroing(Build build, Cell[] occypiedCells)
+    public event Action<Build, Vector3[]> BuildDestroed;
+    public void BuildDestroing(Build build, Vector3[] occypiedPoses)
     {
-        if (BuildDestroed != null)
-        {
-            BuildDestroed(build, occypiedCells);
-        }
+        BuildDestroed?.Invoke(build, occypiedPoses);
+    }
+
+
+    public event Action<bool> AllPartyUnitDowned;
+    public void AllPartyUnitDown(bool enemyUnitsDown)
+    {
+        AllPartyUnitDowned?.Invoke(enemyUnitsDown);
     }
 
 
     public event Action<bool> FightIsOver;
     public void FightFinishing(bool playerWon)
     {
-        if (FightIsOver != null)
-        {
-            FightIsOver(playerWon);
-        }
+        FightIsOver?.Invoke(playerWon);
     }
 
     public event Action<bool> ChangeTurn;
     public void TurnChanging(bool playerTurn)
     {
-        if (ChangeTurn != null)
-        {
-            ChangeTurn(playerTurn);
-        }
+        ChangeTurn?.Invoke(playerTurn);
     }
 
     public event Action<bool> ChangeStatusTurn;
     public void StatusTurnChanging(bool idle)
     {
-        if (ChangeStatusTurn != null)
-        {
-            ChangeStatusTurn(idle);
-        }
+        ChangeStatusTurn?.Invoke(idle);
     }
 
-
-    public event Action<Unit> UnitClicked;
-    public void UnitClick(Unit unit)
-    {
-        if (UnitClicked != null)
-        {
-            UnitClicked(unit);
-        }
-    }
-
-    public event Action<Build, Cell[]> BuildClicked;
-    public void BuildClick(Build build, Cell[] occypiedCells)
-    {
-        if (BuildClicked != null)
-        {
-            BuildClicked(build, occypiedCells);
-        }
-    }
 
     public event Action<int, Cell> FindObjectOnCell;
     public void ObjectFindedOnCell(int objId, Cell cell)
     {
-        if (FindObjectOnCell != null)
-        {
-            FindObjectOnCell(objId, cell);
-        }
+        FindObjectOnCell?.Invoke(objId, cell);
     }
 
 
     public event Action<Vector3, Material, bool> SelectedObject;
     public void ObjectSelected(Vector3 pose, Material material, bool render)
     {
-        if (SelectedObject != null)
-        {
-            SelectedObject(pose, material, render);
-        }
+        SelectedObject?.Invoke(pose, material, render);
     }
 
     public event Action<Vector3> CellRequestByPose;
     public void CellRequestionByPose(Vector3 pose)
     {
-        if (CellRequestByPose != null)
-        {
-            CellRequestByPose(pose);
-        }
+        CellRequestByPose?.Invoke(pose);
     }
 
     public event Action<Cell> CellSend;
     public void CellSending(Cell cell)
     {
-        if (CellSend != null)
-        {
-            CellSend(cell);
-        }
+        CellSend?.Invoke(cell);
     }
 
-    public event Action<Cell> ClickedOnCell;
-    public void ClickOnCell(Cell cell)
+    public event Action<Cell, GameObject> ClickedOnCell;
+    public void ClickOnCell(Cell cell, GameObject occypier)
     {
-        if (ClickedOnCell != null)
-        {
-            ClickedOnCell(cell);
-        }
+        ClickedOnCell?.Invoke(cell, occypier);
 
     }
 
 
     public event Action<Vector3, Cell[]> UnitMoveOnRoute;
-    public void UnitMovingOnRoute (Vector3 UnitPose, Cell[] route)
+    public void UnitMovingOnRoute(Vector3 UnitPose, Cell[] route)
     {
-        if (UnitMoveOnRoute != null)
-        {
-            UnitMoveOnRoute(UnitPose, route);
-        }
+        UnitMoveOnRoute?.Invoke(UnitPose, route);
     }
 
     public event Action<Cell, bool> MouseOnCellEnter;
-    public void MouseOnCellEntered (Cell cell, bool render)
+    public void MouseOnCellEntered(Cell cell, bool render)
     {
-        if (MouseOnCellEnter != null)
-        {
-            MouseOnCellEnter(cell, render);
-        }
+        MouseOnCellEnter?.Invoke(cell, render);
     }
 
 
     public event Action<Cell, bool> MouseOnCellExit;
     public void MouseOnCellExited(Cell cell, bool render)
     {
-        if (MouseOnCellExit != null)
-        {
-            MouseOnCellExit(cell, render);
-        }
+        MouseOnCellExit?.Invoke(cell, render);
     }
 
     public event Action<Cell, Cell, bool> SelectedCellForRoute;
     public void SelectCellForRoute(Cell cell, Cell previousCell, bool overPoint)
     {
-        if (SelectedCellForRoute != null)
-        {
-            SelectedCellForRoute(cell, previousCell, overPoint);
-        }
+        SelectedCellForRoute?.Invoke(cell, previousCell, overPoint);
     }
 
     public event Action ClearRoute;
     public void ClearingRoute()
     {
-        if (ClearRoute != null)
-        {
-            ClearRoute();
-        }
+        ClearRoute?.Invoke();
     }
 
     public event Action<Cell, Cell> ClearRouteCell;
     public void ClearingRouteCell(Cell clearedCell, Cell previousCell)
     {
-        if (ClearRouteCell != null)
-        {
-            ClearRouteCell(clearedCell, previousCell);
-        }
+        ClearRouteCell?.Invoke(clearedCell, previousCell);
     }
 
 
     public event Action<Unit, Unit, int> UnitAttacksUnit;
     public void UnitAttackingUnit(Unit Attacker, Unit Defender, int Damage)
     {
-        if (UnitAttacksUnit != null)
-        {
-            UnitAttacksUnit(Attacker, Defender, Damage);
-        }
+        UnitAttacksUnit?.Invoke(Attacker, Defender, Damage);
     }
 
     public event Action<Unit, Build, int> UnitAttacksBuild;
     public void UnitAttackingBuild(Unit Attacker, Build Defender, int Damage)
     {
-        Debug.Log("В ивентах");
-
-        if (UnitAttacksBuild != null)
-        {
-            Debug.Log("В ивентах: ивент не null!");
-
-            Debug.Log("Урон будет - " + Damage);
-
-            UnitAttacksBuild(Attacker, Defender, Damage);
-        }
+        UnitAttacksBuild?.Invoke(Attacker, Defender, Damage);
     }
 
 
 
-    public event Action CompleteMove;
-    public void movingComplete()
+    public event Action<Unit, int, Vector3> CompleteUnitMove;
+    public void UnitmovingComplete(Unit unit, int unitId, Vector3 unitPose)
     {
-        if (CompleteMove != null)
-        {
-            CompleteMove();
-        }
+        CompleteUnitMove?.Invoke(unit, unitId, unitPose);
+    }
+
+
+    public event Action FightIsStarted;
+    public void StartFight()
+    {
+        FightIsStarted?.Invoke();
+    }
+
+
+    public event Action<int, int> UnitAddedToPlayer;
+    public void AddUnitToPlayer(int unitId, int count)
+    {
+        UnitAddedToPlayer?.Invoke(unitId, count);
+    }
+
+
+    public event Action<int, int> UnitDeletedFromPlayer;
+    public void DeleteUnitFromPlayer(int unitId, int count)
+    {
+        UnitDeletedFromPlayer?.Invoke(unitId, count);
+    }
+
+
+    public event Action<int, bool> UnitStatusChanged;
+    public void ChangeUnitStatus(int unitId, bool status)
+    {
+        UnitStatusChanged?.Invoke(unitId, status);
+    }
+
+
+    public event Action<Transform> turnOnSetObjectMode;
+    public void turningOnSetObjectMode(Transform obj)
+    {
+        turnOnSetObjectMode?.Invoke(obj);  
+    }
+
+    public event Action<int> CreatedPreview;
+    public void CreatePreview(int previewId)
+    {
+        CreatedPreview?.Invoke(previewId);
+    }
+
+    public event Action DeletedPreview;
+    public void DeletePreview()
+    {
+        DeletedPreview?.Invoke();
+    }
+
+
+    public event Action<Cell, int> SpawnedUnit;
+    public void SpawnUnit(Cell cell, int buttonId)
+    {
+        SpawnedUnit?.Invoke(cell, buttonId);
+    }
+
+    public event Action<Unit, bool> AddedUnitToScene; 
+    public void SceneAddUnit(Unit unit, bool enemy)
+    {
+        AddedUnitToScene?.Invoke(unit, enemy);
+    }
+
+    public event Action<Build, bool> AddedBuildToScene;
+    public void SceneAddBuild(Build build, bool enemy)
+    {
+        AddedBuildToScene?.Invoke(build, enemy);
+    }
+
+    public event Action<Unit, int, Vector3> MoveUnitStarts;
+    public void StartUnitMove(Unit unit, int unitId, Vector3 unitPose)
+    {
+        MoveUnitStarts?.Invoke(unit, unitId, unitPose);
+    }
+
+    public event Action<GameObject, Vector3> NewBuildOccypyPose;
+    public void SendNewBuildOccypyPose(GameObject build, Vector3 pose)
+    {
+        NewBuildOccypyPose?.Invoke(build, pose);
+    }
+
+    public event Action<Indestructible> AddedIndestructibleToScene;
+    public void SceneAddIndestructible(Indestructible element)
+    {
+        AddedIndestructibleToScene?.Invoke(element);
+    }
+
+    public event Action<Indestructible> IndestructibleDestroyed;
+    public void BuildDestroing(Indestructible element)
+    {
+        IndestructibleDestroyed?.Invoke(element);
+    }
+
+    public event Action<GameObject, Vector3, Vector3> ChangePreviewPose;
+    public void PreviewPoseChanging(GameObject preview, Vector3 oldPose, Vector3 newPose)
+    {
+        ChangePreviewPose?.Invoke(preview, oldPose, newPose);
     }
 }

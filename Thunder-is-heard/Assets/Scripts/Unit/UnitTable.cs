@@ -4,98 +4,109 @@ using UnityEngine;
 
 public class UnitTable : MonoBehaviour
 {
-    private Unit[] enemies;
-    private Unit[] allies;
+    public List<Unit> enemies;
+    public List<Unit> allies;
+    public List<Build> enemyBuilds;
+    public List<Build> friendlyBuilds;
+    public List<Vector3> indestructibles;
 
-    private void Start()
+    private void Awake()
     {
+        EventMaster.current.AddedBuildToScene += AddBuild;
+        EventMaster.current.AddedUnitToScene += AddUnit;
         EventMaster.current.UnitDies += UnitDie;
-        updateUnitTables();
+        EventMaster.current.BuildDestroed += BuildDestroyed;
+    }
+
+    private void AddBuild(Build build, bool enemy)
+    {
+        if (enemy)
+        {
+            enemyBuilds.Add(build); return;
+        }
+        friendlyBuilds.Add(build);
+    }
+
+    private void AddUnit(Unit unit, bool enemy)
+    {
+        if (enemy)
+        {
+            enemies.Add(unit); return;
+        }
+        allies.Add(unit);
+    }
+
+    private void RemoveBuild(Build build, bool enemy)
+    {
+        if (enemy)
+        {
+            enemyBuilds.Remove(build); return;
+        }
+        friendlyBuilds.Remove(build);
+    }
+
+    private void RemoveUnit(Unit unit, bool enemy)
+    {
+        if (enemy)
+        {
+            enemies.Remove(unit); return;
+        }
+        allies.Remove(unit);
     }
 
     private void UnitDie(Unit unit)
     {
         Debug.Log("Event happens: UnitDies!");
 
-        if (enemies.Length - 1 < 1)
+        if (enemies.Count - 1 < 1)
         {
-            EventMaster.current.FightFinishing(true);
+            EventMaster.current.AllPartyUnitDown(true);
         }
 
-        else if (allies.Length - 1 < 1)
+        else if (allies.Count - 1 < 1)
         {
-            EventMaster.current.FightFinishing(false);
+            EventMaster.current.AllPartyUnitDown(false);
         }
-        unitDown(unit);
+
+        RemoveUnit(unit, unit.CompareTag("EnemyUnit"));
     }
 
-    public void updateUnitTables()
+    private void BuildDestroyed(Build build, Vector3[] occypyPoses)
     {
-        GameObject[] findedEnemies = GameObject.FindGameObjectsWithTag("EnemyUnit");
-        GameObject[] findedAllies = GameObject.FindGameObjectsWithTag("FriendlyUnit");
+        Debug.Log("Event happens: BuildDestroyed!");
 
-            enemies = new Unit[findedEnemies.Length];
-            allies = new Unit[findedAllies.Length];
+        if (enemies.Count - 1 < 1)
+        {
+        }
 
-            enemies = updateTable(findedEnemies, enemies);
-            allies = updateTable(findedAllies, allies);
+        else if (allies.Count - 1 < 1)
+        {
+        }
+
+        RemoveBuild(build, build.CompareTag("EnemyBuild"));
     }
 
+}
 
-    private Unit[] updateTable(GameObject[] finded, Unit[] collector, Unit ignoreUnit = null)
+public class AttackersData
+{
+    public List<Unit> possibleTargetAttackers;
+
+
+    public void AddAttacker(Unit attacker)
     {
-        if (ignoreUnit == null)
+        if (!possibleTargetAttackers.Contains(attacker))
         {
-            for (int index = 0; index < finded.Length; index++)
-            {
-                collector[index] = finded[index].GetComponent<Unit>();
-            }
-
-            return collector;
-        }
-
-        for (int index = 0; index < finded.Length; index++)
-        {
-            Unit currentFindedUnit = finded[index].GetComponent<Unit>();
-            if (currentFindedUnit != ignoreUnit)
-            {
-                collector[index] = finded[index].GetComponent<Unit>();
-            } 
-            
-        }
-
-        return collector;
-
-    }
-
-    public int getUnitCount(string tag)
-    {
-        if (tag == "EnemyUnit")
-        {
-            return enemies.Length;
-        }
-
-        else
-        {
-            return allies.Length;
+            possibleTargetAttackers.Add(attacker);
         }
         
     }
 
-
-    private void unitDown(Unit unit)
+    public void DeleteAttacker(Unit attacker)
     {
-        if (unit.tag == "EnemyUnit")
+        if (possibleTargetAttackers.Contains(attacker))
         {
-            updateTable(GameObject.FindGameObjectsWithTag("EnemyUnit"), enemies, unit);
+            possibleTargetAttackers.Remove(attacker);
         }
-
-        else
-        {
-            updateTable(GameObject.FindGameObjectsWithTag("FriendlyUnit"), allies, unit);
-        }
-
     }
 }
-
-

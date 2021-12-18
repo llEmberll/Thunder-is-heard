@@ -37,23 +37,17 @@ public class GridTable : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void Awake()
     {
         GenerateGrid();
-        //EventMaster.current.SelectedObject += GridSelected;
+
         EventMaster.current.CellRequestByPose += AnswerCellRequest;
-        EventMaster.current.UnitDies += UnitDead;
-        EventMaster.current.BuildDestroed += BuildDestroy;
     }
 
-    private void BuildDestroy(Build build, Cell[] occypiedCells)
+    private void Start()
     {
-        updateStatuses();
-    }
-
-    private void UnitDead(Unit unit)
-    {
-        updateStatuses();
+        
+        
     }
 
     private void AnswerCellRequest(Vector3 pose)
@@ -61,23 +55,6 @@ public class GridTable : MonoBehaviour
         Cell cell = getCellInfoByPose(pose);
         EventMaster.current.CellSending(cell);
     }
-
-    //private void GridSelected(Vector3 pose, Material material, bool render)
-    //{
-    //    Cell cell = cellsData[pose];
-
-    //    if (render)
-    //    {
-    //        cell.renderOn();
-    //    }
-    //    else
-    //    {
-    //        cell.renderOff();
-    //    }
-
-    //    cell.ChangeMaterial(material);
-    //}
-
 
     [ContextMenu("Delete Cells")]
     private void DeleteCells()
@@ -105,32 +82,10 @@ public class GridTable : MonoBehaviour
         cellsData.Add(cellPose, cell);
 
     }
-
-    public void updateStatuses()
-    {
-        foreach (KeyValuePair<Vector3, Cell> item in cellsData)
-        {
-
-            item.Value.updateCellStatus();
-        }
-    }
     
     public void changeTypeOfCell(Vector3 cellPose, int newtype)
     {
         cellsData[cellPose].changeType(newtype);
-    }
-
-    public void changeStatusOfCell(Vector3 cellPose, bool status)
-    {
-        if (status)
-        {
-            cellsData[cellPose].OccypyCell();
-        }
-        else
-        {
-            cellsData[cellPose].freeCell();
-
-        }
     }
 
     public Cell getCellInfoByPose(Vector3 cellPose)
@@ -196,7 +151,7 @@ public class GridTable : MonoBehaviour
                 if (cellsData.ContainsKey(currentPose))
                 {
                     Cell currentCell = cellsData[currentPose];
-                    if (currentCell.IsOccypy == false)
+                    if (currentCell.occypier == null)
                     {
                         if (currentCell.cellPose != Center)
                         {

@@ -8,14 +8,21 @@ public class GameManager : MonoBehaviour
     [SerializeField] public Unit activeUnit;
 
     private GridTable gridTable;
+    private UnitTable unitTable;
+
+    private Cell[] landableCells;
 
     private Cell[] possibleMoveCells;
     private Cell[] blastCells;
     private Cell[] moveRoute;
 
-    private bool idle;
+    private bool idle, existPreview;
+
+    private int previewId;
 
     private int turnCounter;
+
+
     public bool playerTurn;
 
     private Dictionary<Cell, int> realMoveCells;
@@ -24,24 +31,47 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         gridTable = GameObject.FindWithTag("GridGenerator").GetComponent<GridTable>();
-        gridTable.turnOffCells();
+        unitTable = GameObject.FindWithTag("UnitTable").GetComponent<UnitTable>();
 
-        EventMaster.current.FightIsOver += FightIsOver;
-        EventMaster.current.UnitClicked += ClickedOnUnit;
-        EventMaster.current.BuildClicked += ClickedOnBuild;
-        EventMaster.current.CompleteMove += MoveComplete;
+        EventMaster.current.AllPartyUnitDowned += AllUnitsDown;
+        EventMaster.current.CompleteUnitMove += MoveComplete;
         EventMaster.current.ClickedOnCell += clickedOnCell;
         EventMaster.current.UnitDies += UnitTakedDown;
         EventMaster.current.MouseOnCellEnter += MouseOnCellEnter;
         EventMaster.current.SelectedObject += MouseOnActiveUnit;
+        EventMaster.current.CreatedPreview += CreatePreview;
+        EventMaster.current.DeletedPreview += DeletePreview;
 
         activeUnit = null;
-        idle = true;
+        idle = playerTurn = existPreview = false;
         turnCounter = 0;
-        playerTurn = true;
 
         EventMaster.current.TurnChanging(playerTurn);
         EventMaster.current.StatusTurnChanging(idle);
+    }
+
+
+    private void StartFight()
+    {
+        Debug.Log("Fight is started!");
+        gridTable.turnOffCells();
+
+        EventMaster.current.StartFight();
+
+        idle = true;
+        existPreview = false;
+        nextTurn();
+    }
+
+    private void CreatePreview(int id)
+    {
+        existPreview = true;
+        previewId = id;
+    }
+
+    private void DeletePreview()
+    {
+        existPreview = false;
     }
 
     private void MouseOnActiveUnit(Vector3 pose, Material material, bool render)
@@ -74,7 +104,7 @@ public class GameManager : MonoBehaviour
 
                         countRouteCells = getRouteLength(moveRoute);
 
-                        EventMaster.current.SelectCellForRoute(cell, previousRouteCell, activeUnit.Mobility == countRouteCells);
+                        EventMaster.current.SelectCellForRoute(cell, previousRouteCell, activeUnit.mobility == countRouteCells);
                         return;
                     }
                 }
@@ -89,7 +119,7 @@ public class GameManager : MonoBehaviour
                     else
                     {
 
-                        bool overRoute = (activeUnit.Mobility > countRouteCells);
+                        bool overRoute = (activeUnit.mobility > countRouteCells);
 
                         if (overRoute)
                         {
@@ -99,7 +129,7 @@ public class GameManager : MonoBehaviour
                             {
                                 moveRoute[countRouteCells] = cell;
 
-                                overRoute = activeUnit.Mobility == getRouteLength(moveRoute);
+                                overRoute = activeUnit.mobility == getRouteLength(moveRoute);
                                 EventMaster.current.SelectCellForRoute(cell, moveRoute[countRouteCells - 1], overRoute);
                             }
                         }
@@ -117,7 +147,7 @@ public class GameManager : MonoBehaviour
     private void ClearRoute()
     {
         EventMaster.current.ClearingRoute();
-        moveRoute = new Cell[activeUnit.Mobility];
+        moveRoute = new Cell[activeUnit.mobility];
     }
 
 
@@ -191,7 +221,7 @@ public class GameManager : MonoBehaviour
 
     private void DeleteAllRouteAfterValue(Cell cell)
     {
-        Cell[] newRoute = new Cell[activeUnit.Mobility];
+        Cell[] newRoute = new Cell[activeUnit.mobility];
 
         bool cut = false;
 
@@ -252,7 +282,8 @@ public class GameManager : MonoBehaviour
 
     public void Pass()
     {
-        if (playerTurn) nextTurn();
+        Debug.Log("pass!");
+        if (idle && playerTurn) nextTurn();
     }
 
     private void nextTurn()
@@ -270,14 +301,11 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("Обновляем состояния клеток");
 
-
-            gridTable.updateStatuses();
-
             if (activeUnit != null)
             {
                 Debug.Log("Обновляем активные клетки");
 
-                updateActiveCells(activeUnit.transform.position, activeUnit.Mobility, activeUnit.Range);
+                updateActiveCells(activeUnit.transform.position, activeUnit.mobility, activeUnit.distance);
 
                 showActiveCells();
             }
@@ -299,7 +327,7 @@ public class GameManager : MonoBehaviour
         nextTurn();
     }
 
-    private void MoveComplete()
+    private void MoveComplete(Unit unit, int unitId, Vector3 unitPose)
     {
         Debug.Log("Движение окончено");
 
@@ -309,7 +337,7 @@ public class GameManager : MonoBehaviour
         nextTurn();
     }
 
-    private void setActiveUnit(Unit unit)
+    private void SetActiveUnit(Unit unit)
     {
         gridTable.turnOffCells();
         if (unit == activeUnit)
@@ -323,9 +351,9 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("Now new active!");
 
-        moveRoute = new Cell[activeUnit.Mobility];
+        moveRoute = new Cell[activeUnit.mobility];
 
-        updateActiveCells(activeUnit.transform.position, activeUnit.Mobility, activeUnit.Range);
+        updateActiveCells(activeUnit.transform.position, activeUnit.mobility, activeUnit.distance);
 
         showActiveCells();
 
@@ -410,7 +438,7 @@ public class GameManager : MonoBehaviour
 
     }
 
-    private void tryAttackUnit(Unit unit)
+    private void TryAttackUnit(Unit unit)
     {
         Debug.Log("Активный юнит есть");
 
@@ -420,7 +448,7 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("Можно атаковать");
 
-            EventMaster.current.UnitAttackingUnit(activeUnit, unit, activeUnit.Damage);
+            EventMaster.current.UnitAttackingUnit(activeUnit, unit, activeUnit.damage);
 
             hideActiveCells();
 
@@ -435,23 +463,23 @@ public class GameManager : MonoBehaviour
     }
 
 
-    private void ClickedOnBuild(Build build, Cell[] occypiedCells)
+    private void ClickedOnBuild(Build build)
     {
-
-        foreach (Cell ocCell in occypiedCells)
-        {
-            Debug.Log("Занятая зданием клетка: " + ocCell.cellPose.x + "|| " + ocCell.cellPose.z);
-        }
-
         Debug.Log("Здание принято");
-        if (idle && activeUnit != null && build.CompareTag("EnemyBuild"))
+
+        if (activeUnit != null)
         {
-            Debug.Log("Здание может являться целью");
-            if (canAttack(occypiedCells))
+            Vector3[] occypiedPoses = build.occypiedPoses;
+
+            Cell[] occypyCells = new Cell[occypiedPoses.Length];
+
+            for (int index = 0; index < occypyCells.Length; index++) occypyCells[index] = gridTable.getCellInfoByPose(occypiedPoses[index]);
+
+            if (canAttack(occypyCells))
             {
                 Debug.Log("Здание может быть атаковано");
 
-                EventMaster.current.UnitAttackingBuild(activeUnit, build, activeUnit.Damage);
+                EventMaster.current.UnitAttackingBuild(activeUnit, build, activeUnit.damage);
 
                 hideActiveCells();
 
@@ -462,46 +490,23 @@ public class GameManager : MonoBehaviour
                 Debug.Log("Ивент об атаке создан");
             }
         }
+
+        
     }
 
     private void ClickedOnUnit(Unit unit)
     {
         Debug.Log("Юнит принят");
 
-        if (playerTurn && idle)
+        if (activeUnit != null)
         {
-            Debug.Log("Движения нет");
-            string unitTag = unit.tag;
-
-            if (unitTag == "FriendlyUnit")
-            {
-                setActiveUnit(unit);
-            }
-
-            else if (unitTag == "EnemyUnit")
-            {
-
-                Debug.Log("Выбран вражеский юнит");
-
-                if (activeUnit != null)
-                {
-                    tryAttackUnit(unit);
-                    return;
-
-                }
-
-                Debug.Log("Нет активного юнита для атаки");
-            }
-        }
-
-        else
-        {
-            Debug.Log("Сейчас ходит не игрок!");
+            TryAttackUnit(unit);
+            return;
         }
     }
 
 
-    public void UnitTakedDown(Unit unit)
+    private void UnitTakedDown(Unit unit)
     {
         Cell cell = gridTable.getCellInfoByPose(unit.transform.position);
         if (canMove(cell, possibleMoveCells))
@@ -515,6 +520,12 @@ public class GameManager : MonoBehaviour
     }
 
 
+    private void AllUnitsDown(bool EnemyDown)
+    {
+        EventMaster.current.FightFinishing(EnemyDown);
+    }
+
+
     public void FightIsOver(bool playerWon)
     {
         if (playerWon)
@@ -525,17 +536,49 @@ public class GameManager : MonoBehaviour
         Debug.Log("Поражение!");
     }
 
-    public void clickedOnCell(Cell cell)
+    public void clickedOnCell(Cell cell, GameObject occypier)
     {
         Debug.Log("Клетка принята");
 
-        if (playerTurn && activeUnit != null)
+        if (existPreview)
         {
-            Debug.Log("Активный юнит есть");
+            Debug.Log("Включен предпросмотр");
 
-            if (moveRoute.Contains(cell))
+            if (cell.occypier == null)
             {
-                moveUnit(moveRoute);
+                Debug.Log("Поле свободно");
+
+                EventMaster.current.SpawnUnit(cell, previewId);
+                DeletePreview();
+
+            }
+            return;
+        }
+
+        if (playerTurn && idle)
+        {
+            if (occypier != null)
+            {
+                switch(occypier.tag)
+                {
+                    case "EnemyUnit":
+                        ClickedOnUnit(occypier.GetComponent<Unit>());
+                        break;
+                    case "EnemyBuild":
+                        ClickedOnBuild(occypier.GetComponent<Build>());
+                        break;
+                    case "FriendlyUnit":
+                        SetActiveUnit(occypier.GetComponent<Unit>());
+                        break;
+                }
+            }
+
+            else
+            {
+                if (moveRoute.Contains(cell))
+                {
+                    moveUnit(moveRoute);
+                }
             }
         }
         }
