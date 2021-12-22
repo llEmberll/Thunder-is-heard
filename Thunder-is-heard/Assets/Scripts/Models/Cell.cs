@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -18,55 +19,49 @@ public class Cell : MonoBehaviour, IPointerClickHandler
 
     private void Awake()
     {
-        EventMaster.current.UnitDies += UnitDown;
-        EventMaster.current.BuildDestroed += BuildDestroyed;
-        EventMaster.current.AddedUnitToScene += NewUnit;
-        EventMaster.current.AddedIndestructibleToScene += NewIndestructible;
-        EventMaster.current.NewBuildOccypyPose += NewBuild;
+        occypier = null;
+
+        EventMaster.current.ObjectDestroyed += ObjectDestroyed;
+        EventMaster.current.AddedObjectToScene += NewObject;
         EventMaster.current.MoveUnitStarts += UnitStartsMove;
         EventMaster.current.CompleteUnitMove += UnitCompleteMove;
-        EventMaster.current.IndestructibleDestroyed += DestroyIndestructible;
-        EventMaster.current.ChangePreviewPose += PreviewChangePose;
 
         this.cellPose = transform.position;
-
-        Debug.Log("Cellpose " + cellPose.x + " || " + cellPose.z);
 
         this.type = 0;
 
     }
 
-    public void Start()
-    { 
-        
-        
-    }
 
-    private void UnitCompleteMove(Unit unit, int unitId, Vector3 unitPose)
+    private void NewObject(GameObject obj, Vector3[] occypiedPoses)
     {
-        if (unitPose == cellPose)
+        foreach (Vector3 pose in occypiedPoses)
         {
-            occypyCell(unit.gameObject);
+            if (cellPose == pose)
+            {
+                occypyCell(obj);
+                break;
+            }
         }
     }
 
-    private void PreviewChangePose(GameObject preview, Vector3 oldPose, Vector3 newPose)
+    private void ObjectDestroyed(GameObject obj, Vector3[] occypiedPoses)
     {
-        Debug.Log("Cell event");
-
-        if (cellPose == oldPose)
+        foreach (Vector3 pose in occypiedPoses)
         {
-            Debug.Log("cellpose == oldPose => freeCell");
-
-            freeCell();
-            renderOn();
-            return;
+            if (cellPose == pose)
+            {
+                freeCell();
+                break;
+            }
         }
-        if (cellPose == newPose && occypier == null)
-        {
-            Debug.Log("cellpose == newPose && occ == null => occypCell");
+    }
 
-            occypyCell(preview);
+    private void UnitCompleteMove(GameObject unit, int unitId, Vector3[] unitPoses)
+    {
+        if (unitPoses.Contains(cellPose))
+        {
+            occypyCell(unit);
         }
     }
 
@@ -78,76 +73,20 @@ public class Cell : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    private void NewIndestructible(Indestructible element)
-    {
-        if (cellPose == element.transform.position)
-        {
-            occypyCell(element.gameObject);
-        }
-    }
-
-    private void DestroyIndestructible(Indestructible element)
-    {
-        if (cellPose == element.transform.position)
-        {
-            freeCell();
-        }
-    }
-    private void NewUnit(Unit unit, bool enemy)
-    {
-        if (unit.transform.position == cellPose)
-        {
-            occypyCell(unit.gameObject);
-        }
-    }
-
-
-    private void NewBuild(GameObject build, Vector3 pose)
-    {
-        if (pose == cellPose)
-        {
-            occypyCell(build);
-        }
-    }
-
-    private void BuildDestroyed(Build build, Vector3[] occypyPoses)
-    {
-        foreach (Vector3 pose in occypyPoses)
-        {
-            if (pose == cellPose)
-            {
-                freeCell();
-            }
-        }
-    }
-
-    private void UnitDown(Unit unit)
-    {
-        if (cellPose == unit.transform.position)
-        {
-            freeCell();
-        }
-    }
 
     public void occypyCell(GameObject obj)
     {
         occypier = obj;
-        renderOff();
-        EventMaster.current.AddedUnitToScene -= NewUnit;
-        EventMaster.current.NewBuildOccypyPose -= NewBuild;
-        EventMaster.current.BuildDestroed -= BuildDestroyed;
-        EventMaster.current.IndestructibleDestroyed -= DestroyIndestructible;
-        EventMaster.current.AddedIndestructibleToScene -= NewIndestructible;
+        renderSwitch(false);
+        EventMaster.current.AddedObjectToScene -= NewObject;
+        EventMaster.current.CompleteUnitMove -= UnitCompleteMove;
     }
 
     public void freeCell()
     {
         occypier = null;
-        EventMaster.current.AddedUnitToScene += NewUnit;
-        EventMaster.current.NewBuildOccypyPose += NewBuild;
-        EventMaster.current.BuildDestroed += BuildDestroyed;
-        EventMaster.current.IndestructibleDestroyed += DestroyIndestructible;
-        EventMaster.current.AddedIndestructibleToScene += NewIndestructible;
+        EventMaster.current.AddedObjectToScene += NewObject;
+        EventMaster.current.CompleteUnitMove += UnitCompleteMove;
     }
 
     public void changeType(int newType)
@@ -182,20 +121,11 @@ public class Cell : MonoBehaviour, IPointerClickHandler
         
     }
 
-    public void renderOff()
+    public void renderSwitch(bool render)
     {
         if (_meshRenderer != null)
         {
-            _meshRenderer.enabled = false;
-        }
-        
-    }
-
-    public void renderOn()
-    {
-        if (_meshRenderer != null)
-        {
-            _meshRenderer.enabled = true;
+            _meshRenderer.enabled = render;
         }
     }
 

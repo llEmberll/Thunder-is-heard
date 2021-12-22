@@ -10,17 +10,19 @@ public class SelectionManager : MonoBehaviour
     [SerializeField] private Material previewMaterial;
 
     [SerializeField] private Image damage, health;
-    [SerializeField] private Text name, damageCount, healthCount;
+    [SerializeField] private Text elementName, damageCount, healthCount;
     [SerializeField] private Canvas UI, distanceLine;
     [SerializeField] private Slider healthBar;
     [SerializeField] private Image healthBarFill;
     [SerializeField] private Color friendlyHealthColor, enemyHealthColor;
-    [SerializeField] private SpriteRenderer friendlySelector, enemySelector;
+    [SerializeField] private SpriteRenderer friendlySelector, enemySelector, enemyTargetSelector;
+
+    [SerializeField] private SpriteRenderer[] attackerSelectors;
 
     [SerializeField] private Vector2 unitHealthBarSize, buildHealthBarSize;
     [SerializeField] private float UIUnitPoseByY, UIBuildPoseByY;
 
-
+    private Dictionary<string, ObjectUI> UIconfigs;
 
     [SerializeField] private GameObject overRouteImage;
     [SerializeField] private GameObject routeImage;
@@ -41,18 +43,39 @@ public class SelectionManager : MonoBehaviour
     private int previewId;
     private float previewOffsetByY;
 
-
-
     private Transform _selection;
 
     private Prefabs dataBase;
+    private UnitTable unitTable;
+
+
+    private class ObjectUI
+    {
+        public Color color;
+        public Vector2 healthBarSize;
+        public float UIposeByY;
+        public SpriteRenderer selector;
+        public bool distance;
+        public bool health, damage;
+
+        public ObjectUI(Color Color, Vector2 HealthBarSize, float UIPoseByY, SpriteRenderer Selector, bool Distance, bool Health, bool Damage)
+        {
+            color = Color;
+            healthBarSize = HealthBarSize;
+            UIposeByY = UIPoseByY;
+            selector = Selector;
+            distance = Distance;
+            health = Health;
+            damage = Damage;
+        }
+    }
+
 
     private void Awake()
     {
         EventMaster.current.ChangeTurn += ChangeTurn;
         EventMaster.current.ChangeStatusTurn += ChangeStatusTurn;
-        EventMaster.current.UnitDies += UnitDead;
-        EventMaster.current.BuildDestroed += BuildDestroy;
+        EventMaster.current.ObjectDestroyed += ObjectDestroyed;
         EventMaster.current.CellSend += GetCell;
         EventMaster.current.SelectedCellForRoute += CellForRoute;
         EventMaster.current.ClearRoute += ClearRouteCells;
@@ -63,28 +86,37 @@ public class SelectionManager : MonoBehaviour
         EventMaster.current.DeletedPreview += DeletePreview;
 
         dataBase = GameObject.FindGameObjectWithTag("Prefabs").GetComponent<Prefabs>();
+        unitTable = GameObject.FindGameObjectWithTag("UnitTable").GetComponent<UnitTable>();
+
+        UIconfigs = new Dictionary<string, ObjectUI>() {
+            { unitTable.friendlyUnitTag, new ObjectUI(friendlyHealthColor, unitHealthBarSize, UIUnitPoseByY, friendlySelector, true, true, true) },
+            { unitTable.enemyUnitTag, new ObjectUI(enemyHealthColor, unitHealthBarSize, UIUnitPoseByY, enemySelector, true, true, true) },
+            { unitTable.friendlyBuildTag, new ObjectUI(friendlyHealthColor, buildHealthBarSize, UIBuildPoseByY, friendlySelector, false, true, false) },
+            { unitTable.enemyBuildTag, new ObjectUI(enemyHealthColor, buildHealthBarSize, UIBuildPoseByY, enemySelector, false, true, false) }
+        };
     }
 
     private void Start()
     {
-        
-        
         fightPrepareButtons.enabled = preparePanel.enabled = true;
+        fightPrepareButtons.gameObject.SetActive(true);
+        preparePanel.gameObject.SetActive(true);
+
         fightButtons.enabled = false;
+        fightButtons.gameObject.SetActive(false);
+
 
         allRoute = new List<GameObject>();
 
-        UI.enabled = distanceLine.enabled = enemySelector.enabled = friendlySelector.enabled = false;
+        UI.enabled = distanceLine.enabled = enemySelector.enabled = friendlySelector.enabled = enemyTargetSelector.enabled = false;
         damage.gameObject.SetActive(false); health.gameObject.SetActive(false);
     }
 
-
     private void StartFight()
     {
-        Debug.Log("Start fight â SelMan");
-
         Destroy(fightPrepareButtons.gameObject);
         Destroy(preparePanel.gameObject);
+        fightButtons.gameObject.SetActive(true);
         fightButtons.enabled = true;
         _preview = null;
 
@@ -109,7 +141,7 @@ public class SelectionManager : MonoBehaviour
         mesh.transform.localScale = data.meshScale;
         unit.model = mesh.transform;
 
-        unit.unitName = data.name;
+        unit.elementName = data.name;
         unit.unitId = data.id;
         unit.maxHealth = data.maxHealth;
         unit.damage = data.damage;
@@ -178,7 +210,6 @@ public class SelectionManager : MonoBehaviour
                 }
             }
         }
-
         DeleteFromRoute(Bucket);
 
     }
@@ -211,7 +242,7 @@ public class SelectionManager : MonoBehaviour
     {
         for (int index = 0; index < allRoute.Count; index++)
         {
-            Destroy(allRoute[index]);
+            if (allRoute[index] != null) Destroy(allRoute[index]);
         }
         allRoute.Clear();
     }
@@ -259,33 +290,21 @@ public class SelectionManager : MonoBehaviour
         cell.ChangeMaterial(defaultCellMaterial);
     }
 
-    private void BuildDestroy(Build build, Vector3[] occypyPoses)
+    private void ObjectDestroyed(GameObject obj, Vector3[] poses)
     {
         if (_selection != null)
         {
-            Vector3 selectionPose = _selection.transform.position;
-            if (occypyPoses.Contains(selectionPose))
+            if (poses.Contains(_selection.transform.position))
             {
                 TurnOffUI();
             }
         }
-    }
-
-    private void UnitDead(Unit unit)
-    {
-        if (_selection != null)
-        {
-            if (unit.transform.position == _selection.transform.position)
-            {
-                TurnOffUI();
-            }
-        }
-        EventMaster.current.CellRequestionByPose(unit.transform.position);
+        hideAttackers();
     }
 
     private void ChangeTurn(bool turn)
     {
-        playerTurn = pass.enabled = turn;
+        playerTurn = pass.interactable = turn;
     }
 
     private void ChangeStatusTurn(bool status)
@@ -304,77 +323,108 @@ public class SelectionManager : MonoBehaviour
         {
             Deselection();
         }
-        RaycastAction();
-        
+        SelectionHandle();
     }
 
-    private void SetUnitUI(Transform selection, Unit unit, Color healthColor, SpriteRenderer selector)
+    private void showAttackers(GameObject target)
     {
-        Vector3 selectionPose = selection.transform.position;
-        name.text = unit.unitName;
+        List<GameObject> targetAttackers = GetAttackers(target);
+        if (targetAttackers != null)
+        {
+            attackerSelectors = new SpriteRenderer[targetAttackers.Count];
+            int index = 0;
 
-        healthBar.GetComponent<RectTransform>().sizeDelta = unitHealthBarSize;
+            foreach (GameObject attacker in targetAttackers)
+            {
+                if (attacker != null)
+                {
+                    var selector = Instantiate(friendlySelector, new Vector3(attacker.transform.position.x, 0.047f, attacker.transform.position.z), Quaternion.identity);
+                    selector.enabled = true;
+
+                    selector.name = $"selector-{index}";
+
+                    attackerSelectors[index] = selector;
+                    index++;
+                }
+            }
+        }
+    }
+
+    private void hideAttackers()
+    {
+        foreach (SpriteRenderer selector in attackerSelectors)
+        {
+            if (selector != null)
+            {
+                Destroy(selector.gameObject);
+            }
+            
+        }
+    }
+
+    private List<GameObject> GetAttackers(GameObject element)
+    {
+        if (unitTable.GetEnemyTagsByTag(unitTable.friendlyUnitTag).Contains(element.tag) && unitTable.attackersInfo.ContainsKey(element))
+        {
+            return unitTable.attackersInfo[element].possibleTargetAttackers;
+        }
+        return null;
+    }
+
+    private void SetUI(Transform selection, Destructible obj, ObjectUI UIconfig)
+    {
+        UI.enabled = true;
+        UI.transform.position = new Vector3(obj.center.x, UIconfig.UIposeByY, obj.center.z);
+
+        elementName.text = obj.elementName;
+        healthBar.GetComponent<RectTransform>().sizeDelta = UIconfig.healthBarSize;
         healthBar.minValue = 0;
-        healthBar.maxValue = unit.maxHealth;
-        healthBar.value = unit.health;
-        healthBarFill.color = healthColor;
+        healthBar.maxValue = obj.maxHealth;
+        healthBar.value = obj.health;
+        healthBarFill.color = UIconfig.color;
 
         enemySelector.enabled = friendlySelector.enabled = false;
+
+        SpriteRenderer selector = UIconfig.selector;
         selector.enabled = true;
-        selector.transform.position = new Vector3(selectionPose.x, 0.047f, selectionPose.z);
-        selector.transform.localScale = new Vector3(0.14f, 0.14f, 0.14f);
+
+        selector.transform.position = new Vector3(obj.center.x, 0.047f, obj.center.z);
+
+        float maxBuildSize = 0.14f * (Mathf.Max(obj.sizeX, obj.sizeZ));
+
+        selector.transform.localScale = new Vector3(maxBuildSize, maxBuildSize, maxBuildSize);
+
+        SetDistanceAndDamage(UIconfig.distance && UIconfig.damage, selection.transform.position, obj.gameObject);
+
+        health.enabled = true;
+        health.gameObject.SetActive(true);
+        healthCount.text = $"{obj.maxHealth}";
+    }
+
+
+    private void SetDistanceAndDamage(bool needDraw, Vector3 selectionPose, GameObject obj)
+    {
+        if (!needDraw)
+        {
+            distanceLine.enabled = false;
+            damage.gameObject.SetActive(false);
+            damage.enabled = false;
+            return;
+        }
+           
+        Unit unit = obj.GetComponent<Unit>();
 
         distanceLine.enabled = true;
         distanceLine.transform.position = new Vector3(selectionPose.x, 0.045f, selectionPose.z);
         float RangeSize = 800 + (1600 * unit.distance);
         distanceLine.GetComponent<RectTransform>().sizeDelta = new Vector2(RangeSize, RangeSize);
 
-        health.gameObject.SetActive(true);
-        health.enabled = true;
-
         damage.gameObject.SetActive(true);
         damage.enabled = true;
-
-        healthCount.text = $"{unit.maxHealth}";
         damageCount.text = $"{unit.damage}";
     }
 
-    private void SetBuildUI(Transform selection, Build build, Color healthColor, SpriteRenderer selector)
-    {
-        name.text = build.buildName;
-        healthBar.GetComponent<RectTransform>().sizeDelta = buildHealthBarSize;
-        healthBar.minValue = 0;
-        healthBar.maxValue = build.maxHealth;
-        healthBar.value = build.health;
-        healthBarFill.color = healthColor;
-
-        enemySelector.enabled = friendlySelector.enabled = false;
-        selector.enabled = true;
-
-        selector.transform.position = new Vector3(build.center.x, 0.047f, build.center.z);
-
-        float maxBuildSize = 0.14f * (Mathf.Max(build.sizeX, build.sizeZ));
-
-        selector.transform.localScale = new Vector3(maxBuildSize, maxBuildSize, maxBuildSize);
-
-        distanceLine.enabled = false;
-
-        damage.enabled = false;
-        damage.gameObject.SetActive(false);
-
-        health.enabled = true;
-        health.gameObject.SetActive(true);
-
-        
-    }
-
-    private void SetUIPose(Vector3 pose)
-    {
-        UI.enabled = true;
-        UI.transform.position = pose;
-    }
-
-    private void RaycastAction()
+    private void SelectionHandle()
     {
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -391,43 +441,24 @@ public class SelectionManager : MonoBehaviour
 
                     else
                     {
-                        Cell cell = selection.GetComponent<Cell>();
-                        GameObject selectionObject = cell.occypier;
-
-                        if (selectionObject != null)
-                        {
-                            switch (selectionObject.tag)
-                            {
-                                case "FriendlyUnit":
-                                    SetUIPose(new Vector3(selectionObject.transform.position.x, UIUnitPoseByY, selectionObject.transform.position.z));
-                                    SetUnitUI(selection, selectionObject.GetComponent<Unit>(), friendlyHealthColor, friendlySelector);
-                                    _selection = selection;
-                                    break;
-                                case "EnemyUnit":
-                                    SetUIPose(new Vector3(selectionObject.transform.position.x, UIUnitPoseByY, selectionObject.transform.position.z));
-                                    SetUnitUI(selection, selectionObject.GetComponent<Unit>(), enemyHealthColor, enemySelector);
-                                    _selection = selection;
-                                    break;
-                                case "FriendlyBuild":
-                                    Build friendlyBuild = selectionObject.GetComponent<Build>();
-                                    SetUIPose(new Vector3(friendlyBuild.center.x, UIBuildPoseByY, friendlyBuild.center.z));
-                                    SetBuildUI(selection, selectionObject.GetComponent<Build>(), friendlyHealthColor, friendlySelector);
-                                    _selection = selection;
-                                    break;
-                                case "EnemyBuild":
-                                    Build enemyBuild = selectionObject.GetComponent<Build>();
-                                    SetUIPose(new Vector3(enemyBuild.center.x, UIBuildPoseByY, enemyBuild.center.z));
-                                    SetBuildUI(selection, selectionObject.GetComponent<Build>(), enemyHealthColor, enemySelector);
-                                    _selection = selection;
-                                    break;
-                                case "Destructible":
-                                    break;
-                            }
-                        }
+                        selectAction(selection);
                     }
                     break;
             }
         }
+    }
+
+    private void selectAction(Transform selection)
+    {
+        Cell cell = selection.GetComponent<Cell>();
+        GameObject selectionObject = cell.occypier;
+
+        if (selectionObject != null && UIconfigs.ContainsKey(selectionObject.tag))
+        {
+            SetUI(selection, selectionObject.GetComponent<Destructible>(), UIconfigs[selectionObject.tag]);
+            showAttackers(selectionObject);
+        }
+        _selection = selection;
     }
 
     private void Deselection()
@@ -435,19 +466,15 @@ public class SelectionManager : MonoBehaviour
         if (_selection.CompareTag("Cell"))
         {
             GameObject obj = _selection.GetComponent<Cell>().occypier;
+
             if (obj != null)
             {
                 if (obj.CompareTag("FriendlyUnit") || obj.CompareTag("EnemyUnit") || obj.CompareTag("EnemyBuild") || obj.CompareTag("FriendlyBuild"))
                 {
+                    hideAttackers();
                     TurnOffUI();
                 }
             }
-            
-            else
-            {
-                var selectionRenderer = _selection.GetComponent<Renderer>();
-                selectionRenderer.material = defaultCellMaterial;
-            }  
         }
         _selection = null;
     }

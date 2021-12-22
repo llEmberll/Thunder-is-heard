@@ -6,7 +6,6 @@ using UnityEngine;
 public class AI : MonoBehaviour
 {
     private int mood;
-    private Unit activeUnit;
     private GridTable gridTable;
     private UnitTable unitTable;
 
@@ -40,7 +39,7 @@ public class AI : MonoBehaviour
 
     private void Start()
     {
-        gridTable = GameObject.FindWithTag("GridGenerator").GetComponent<GridTable>();
+        gridTable = GameObject.FindWithTag("GridTable").GetComponent<GridTable>();
         unitTable = GameObject.FindWithTag("UnitTable").GetComponent<UnitTable>();
 
     }
@@ -58,15 +57,17 @@ public class AI : MonoBehaviour
         for (int index = 0; index < unitTable.allies.Count; index++)
         {
             TargetData targetData = new TargetData();
-            Unit possibleTarget = unitTable.allies[index];
+            Unit possibleTarget = unitTable.allies[index].GetComponent<Unit>();
 
             targetData.target = possibleTarget;
             targetData.possibleTargetAttackers = new Unit[unitTable.enemies.Count];
 
             bool existTarget = false;
 
-            foreach (Unit attacker in unitTable.enemies)
+            foreach (GameObject element in unitTable.enemies)
             {
+                Unit attacker = element.GetComponent<Unit>();
+
                 Cell[] attackCells = gridTable.getRange(attacker.transform.position, attacker.distance, true);
                 if (attackCells.Contains(gridTable.getCellInfoByPose(possibleTarget.transform.position)))
                 {

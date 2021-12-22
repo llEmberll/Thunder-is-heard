@@ -1,99 +1,211 @@
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class UnitTable : MonoBehaviour
 {
-    public List<Unit> enemies;
-    public List<Unit> allies;
-    public List<Build> enemyBuilds;
-    public List<Build> friendlyBuilds;
-    public List<Vector3> indestructibles;
+    private GridTable gridTable;
+    public List<GameObject> enemies;
+    public string enemyUnitTag = "EnemyUnit";
+    public List<GameObject> allies;
+    public string friendlyUnitTag = "FriendlyUnit";
+    public List<GameObject> enemyBuilds;
+    public string enemyBuildTag = "EnemyBuild";
+    public List<GameObject> friendlyBuilds;
+    public string friendlyBuildTag = "FriendlyBuild";
+    public List<GameObject> indestructibles;
+    public string indestructibleTag = "Indestructibles";
+
+    public Dictionary<GameObject, AttackersData> attackersInfo;
+
+    private Dictionary<string, ElementCollection> collections;
+
+    private class ElementCollection
+    {
+        public List<GameObject> elementCollection;
+
+        public ElementCollection(List<GameObject> ElementCollection)
+        {
+            elementCollection = ElementCollection;
+        }
+    }
+
 
     private void Awake()
     {
-        EventMaster.current.AddedBuildToScene += AddBuild;
-        EventMaster.current.AddedUnitToScene += AddUnit;
-        EventMaster.current.UnitDies += UnitDie;
-        EventMaster.current.BuildDestroed += BuildDestroyed;
+        attackersInfo = new Dictionary<GameObject, AttackersData>();
+
+        collections = new Dictionary<string, ElementCollection>
+        {
+            { enemyUnitTag, new ElementCollection(enemies) },
+            { enemyBuildTag, new ElementCollection(enemyBuilds) },
+            { friendlyUnitTag, new ElementCollection(allies) },
+            { friendlyBuildTag, new ElementCollection(friendlyBuilds) },
+            { indestructibleTag, new ElementCollection(indestructibles) }
+        };
+
+        gridTable = GameObject.FindWithTag("GridTable").GetComponent<GridTable>();
+        EventMaster.current.AddedObjectToScene += AddObject;
+        EventMaster.current.ObjectDestroyed += RemoveObject;
+        EventMaster.current.CompleteUnitMove += UnitChangePose;
     }
 
-    private void AddBuild(Build build, bool enemy)
+    private void UnitChangePose(GameObject unit, int unitId, Vector3[] unitPoses)
     {
-        if (enemy)
-        {
-            enemyBuilds.Add(build); return;
-        }
-        friendlyBuilds.Add(build);
+        RemoveObject(unit, unitPoses);
+        AddObject(unit, unitPoses);
     }
 
-    private void AddUnit(Unit unit, bool enemy)
+    private void AddObject(GameObject obj, Vector3[] poses)
     {
-        if (enemy)
+        List<GameObject> objList = collections[obj.tag].elementCollection;
+        if (!objList.Contains(obj))
         {
-            enemies.Add(unit); return;
+            objList.Add(obj);
+
+            UpdateAttackers(obj, poses, GetEnemyUnitTagByTag(obj.tag));
+            UpdateTargets(obj);
         }
-        allies.Add(unit);
     }
 
-    private void RemoveBuild(Build build, bool enemy)
+
+    private void RemoveObject(GameObject obj, Vector3[] poses)
     {
-        if (enemy)
-        {
-            enemyBuilds.Remove(build); return;
-        }
-        friendlyBuilds.Remove(build);
+        attackersInfo.Remove(obj);
+        collections[obj.tag].elementCollection.Remove(obj);
+        RemoveUnitAttackers(obj);
+        
+
     }
 
-    private void RemoveUnit(Unit unit, bool enemy)
+
+    private void RemoveUnitAttackers(GameObject unit) //Очистка списков, где удаленный элемент был атакующим
     {
-        if (enemy)
+        if (!unit.tag.Contains("Unit")) return;
+
+        foreach (KeyValuePair<GameObject, AttackersData> record in attackersInfo)
         {
-            enemies.Remove(unit); return;
+            record.Value.possibleTargetAttackers.Remove(unit);
         }
-        allies.Remove(unit);
     }
 
-    private void UnitDie(Unit unit)
+
+    private void UpdateAttackers(GameObject element, Vector3[] poses, string tag) //Кто может атаковать эту цель
     {
-        Debug.Log("Event happens: UnitDies!");
+        List<GameObject> possibleAttackers = collections[tag].elementCollection;
 
-        if (enemies.Count - 1 < 1)
+        AttackersData attackersData = new AttackersData();
+        attackersData.possibleTargetAttackers = new List<GameObject>();
+
+        foreach (GameObject obj in possibleAttackers)
         {
-            EventMaster.current.AllPartyUnitDown(true);
-        }
+            if (obj.transform.position != element.transform.position)
+            {
+                Unit attacker = obj.GetComponent<Unit>();
+                Cell[] attackCells = gridTable.getRange(attacker.transform.position, attacker.distance, true);
 
-        else if (allies.Count - 1 < 1)
-        {
-            EventMaster.current.AllPartyUnitDown(false);
-        }
+                if (ElementIntersection(attackCells, poses))
+                {
+                    attackersData.AddAttacker(obj);
 
-        RemoveUnit(unit, unit.CompareTag("EnemyUnit"));
+                }
+            }
+        }
+        attackersInfo.Add(element, attackersData);
     }
 
-    private void BuildDestroyed(Build build, Vector3[] occypyPoses)
+    private bool ElementIntersection(Cell[] cells, Vector3[] poses) 
+    { 
+        foreach (Vector3 pose in poses)
+        {
+            if (cells.Contains(gridTable.getCellInfoByPose(pose)))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public string[] GetEnemyTagsByTag(string objectTag)
     {
-        Debug.Log("Event happens: BuildDestroyed!");
-
-        if (enemies.Count - 1 < 1)
+        if (objectTag.Contains("Friendly"))
         {
+            return new string[] { enemyUnitTag, enemyBuildTag };
         }
-
-        else if (allies.Count - 1 < 1)
-        {
-        }
-
-        RemoveBuild(build, build.CompareTag("EnemyBuild"));
+        return new string[] { friendlyUnitTag, friendlyBuildTag };
     }
 
+    public string GetEnemyUnitTagByTag(string objectTag)
+    {
+        if (objectTag.Contains("Friendly"))
+        {
+            return enemyUnitTag;
+        }
+        return friendlyUnitTag;
+    }
+
+    public bool IsThisEnemy(string tag, GameObject target)
+    {
+        if (tag.Contains("Friendly"))
+        {
+            if (target.tag.Contains("Enemy"))
+            {
+                return true;
+            }
+        }
+        else
+        {
+            if (target.tag.Contains("Friendly"))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private void UpdateTargets(GameObject element) //Кого может атаковать эта цель
+    {
+        if (!element.tag.Contains("Unit")) return;
+
+        Unit attacker = element.GetComponent<Unit>();
+        Cell[] attackCells = gridTable.getRange(attacker.transform.position, attacker.distance, true);
+
+        string[] enemyTags = GetEnemyTagsByTag(element.tag);
+
+        for (int index = 0; index < attackCells.Length; index++)
+        {
+            Cell currentCell = attackCells[index];
+
+            if (currentCell != null && currentCell.occypier != null && currentCell.occypier != element)
+            {
+                GameObject occypier = currentCell.occypier;
+
+                if (enemyTags.Contains(occypier.tag))
+                {
+                    if (attackersInfo.ContainsKey(occypier))
+                    {
+                        attackersInfo[occypier].AddAttacker(element);
+                    }
+                    else
+                    {
+                        AddObject(occypier, occypier.GetComponent<Destructible>().occypiedPoses);
+                    }
+                }
+            }
+        }
+    }
+    
 }
 
 public class AttackersData
 {
-    public List<Unit> possibleTargetAttackers;
+    public List<GameObject> possibleTargetAttackers;
 
 
-    public void AddAttacker(Unit attacker)
+    public void AddAttacker(GameObject attacker)
     {
         if (!possibleTargetAttackers.Contains(attacker))
         {
@@ -102,7 +214,7 @@ public class AttackersData
         
     }
 
-    public void DeleteAttacker(Unit attacker)
+    public void DeleteAttacker(GameObject attacker)
     {
         if (possibleTargetAttackers.Contains(attacker))
         {

@@ -116,12 +116,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 356897fcb6cea0e4cabb8fb15f6fe294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 0
   maxHealth: 7
+  health: 0
+  id: 0
+  elementName: "\u0411\u041C\u041F \"\u041B\u0438\u0441\""
+  elementType: 0
   damage: 3
   mobility: 3
   distance: 3
-  unitName: "\u0411\u041C\u041F \"\u041B\u0438\u0441\""
   realSpeed: 2
   type: 0
   unitId: 0

@@ -18,8 +18,6 @@ public class Prefabs : MonoBehaviour
         currentIdKey = 0;
         AddUnit(lis, currentIdKey);
         AddUnit(CT, currentIdKey);
-
-        Debug.Log("Префабы обновлены");
     }
 
     
@@ -38,18 +36,12 @@ public class Prefabs : MonoBehaviour
     {
         if (element != null)
         {
-
-            Debug.Log("Элемент не null");
-
-
-            Debug.Log("id = " + elementId);
-
             Unit unitClass = element.GetComponent<Unit>();
 
             GameObject prefab = element.transform.FindChildByTag("Model");
             GameObject preview = element.transform.FindChildByTag("Preview");
 
-            if (prefab == null && preview != null)
+            if (prefab == null && preview == null)
             {
                 Debug.Log("В экземпляре нет меша, запись не добавлена в базу"); 
                 return;
@@ -57,20 +49,13 @@ public class Prefabs : MonoBehaviour
 
             Vector3 meshScale = new Vector3((prefab.transform.localScale.x * element.transform.localScale.x), (prefab.transform.localScale.y * element.transform.localScale.y), (prefab.transform.localScale.z * element.transform.localScale.z));
 
-            UnitData newUnitRecord = new UnitData(unitClass.unitName, elementId, unitClass.maxHealth, unitClass.damage, unitClass.distance, unitClass.mobility, unitClass.realSpeed, prefab.transform.position, meshScale, prefab, preview);
+            UnitData newUnitRecord = new UnitData(unitClass.elementName, elementId, unitClass.maxHealth, unitClass.damage, unitClass.distance, unitClass.mobility, unitClass.realSpeed, prefab.transform.position, meshScale, prefab, preview);
 
             if (!units.ContainsKey(elementId))
             {
-
-                Debug.Log("В базе нет такого айди");
-
-
-
                 units.Add(elementId, newUnitRecord); 
                 
                 currentIdKey++;
-
-                Debug.Log("Добавлено");
             }
         }    
     }

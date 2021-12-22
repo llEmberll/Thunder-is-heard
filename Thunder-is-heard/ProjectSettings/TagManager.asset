@@ -5,7 +5,6 @@ TagManager:
   serializedVersion: 2
   tags:
   - Selectable
-  - GridGenerator
   - Cell
   - FriendlyUnit
   - Terrain
@@ -24,6 +23,7 @@ TagManager:
   - Destructible
   - FriendlyBuild
   - Preview
+  - GridTable
   layers:
   - Default
   - TransparentFX

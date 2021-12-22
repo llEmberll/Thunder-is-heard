@@ -1,12 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Unit : MonoBehaviour
+public class Unit : Destructible
 {
-    public int health, maxHealth,  damage, mobility, distance;
-    public string unitName;
+    public int damage, mobility, distance;
     public float realSpeed;
     public int type, unitId;
 
@@ -18,11 +15,9 @@ public class Unit : MonoBehaviour
 
     public Animator animator;
 
-    
-
     public Unit(string UnitName, int Id, int MaxHealth, int Damage, int Distance, int Mobility, float RealSpeed, Transform Model)
     {
-        this.unitName = UnitName;
+        this.elementName = UnitName;
         this.unitId = Id;
         this.maxHealth = MaxHealth;
         this.damage = Damage;
@@ -31,16 +26,16 @@ public class Unit : MonoBehaviour
         this.realSpeed = RealSpeed;
         this.model = Model;
         this.type = 0;
-
     }
 
     private void Awake()
     {
-        EventMaster.current.UnitMoveOnRoute += moveOnRoute;
-        EventMaster.current.UnitAttacksUnit += SomebodyAttacks;
-        EventMaster.current.UnitAttacksBuild += BuildHasBeenAttack;
+        center = transform.position;
+        sizeX = sizeZ = 1;
 
-        
+        EventMaster.current.UnitAttacks += SomeBodyAttacks;
+
+        EventMaster.current.UnitMoveOnRoute += moveOnRoute;
     }
 
     private void Start()
@@ -49,33 +44,26 @@ public class Unit : MonoBehaviour
 
         animator = model.GetComponent<Animator>();
 
-        Debug.Log("unit посылает ивент о его появлении");
-
-        EventMaster.current.SceneAddUnit(GetComponent<Unit>(), this.CompareTag("EnemyUnit"));
+        UpdateOccypiedPoses();
+        EventMaster.current.SceneAddObject(this.gameObject, occypiedPoses);
     }
 
-    private void BuildHasBeenAttack(Unit attacker, Build build, int damage)
+    private void SomeBodyAttacks(GameObject attacker, GameObject defender, Vector3 attackPoint, int damage)
     {
-        if (attacker == GetComponent<Unit>())
-        {
-            rotateToTarget(build.transform.position);
-        }
-    }
+        Debug.Log("Unit, somebody attacks!");
 
-    private void SomebodyAttacks(Unit attacker, Unit defender, int damage)
-    {
-        Unit thisUnit = this.GetComponent<Unit>();
-
-        if (attacker == thisUnit)
+        if (attacker == this.gameObject)
         {
-            attackUnit(defender);
+            rotateToTarget(attackPoint);
         }
         else
         {
-            if (defender == thisUnit)
+            if (DamageLethality(damage))
             {
-                getDamage(damage);
+                EventMaster.current.UnitMoveOnRoute -= moveOnRoute;
+                EventMaster.current.UnitAttacks -= SomeBodyAttacks;
             }
+            ObjectHasBeenAttack(attacker, defender, attackPoint, damage);
         }
     }
 
@@ -120,49 +108,14 @@ public class Unit : MonoBehaviour
 
     private void occypyCell(Cell cell)
     {
-        Debug.Log("Приказ о передвижении принят юнитом!");
         point = cell;
         rotateToTarget(point.transform.position);
 
         EventMaster.current.StartUnitMove(GetComponent<Unit>(), unitId, this.transform.position);
 
         mustMove = true;
-        Debug.Log("Началось движение");
     }
 
-
-    private void attackUnit(Unit unit)
-    {
-        rotateToTarget(unit.transform.position);
-        Debug.Log("Приказ атаковать принят юнитом!");
-    }
-
-    private void getDamage(int Damage)
-    {
-        Debug.Log("Юнит получил урон");
-
-        health -= Damage;
-        if (health <= 0)
-        {
-            Debug.Log("Юнит больше не имеет здоровья");
-            Die();
-
-        } 
-    }
-
-    private void Die()
-    {
-        Debug.Log("Юнит выходит из боя!");
-
-        EventMaster.current.UnitMoveOnRoute -= moveOnRoute;
-        EventMaster.current.UnitAttacksUnit -= SomebodyAttacks;
-        EventMaster.current.UnitAttacksBuild -= BuildHasBeenAttack;
-
-        EventMaster.current.UnitDying(this.GetComponent<Unit>());
-
-        Destroy(this.gameObject);
-        
-    }
 
     private void FixedUpdate()
     {
@@ -182,18 +135,14 @@ public class Unit : MonoBehaviour
 
     private void moveComplete()
     {
-        Debug.Log("Юнит прибыл на точку");
-
-        
+        UpdateOccypiedPoses();
 
         Cell nextPoint = setNextPoint();
         if (nextPoint == null)
         {
             mustMove = false;
 
-            EventMaster.current.UnitmovingComplete(GetComponent<Unit>(), unitId, this.transform.position);
-
-            Debug.Log("must move: " + mustMove);
+            EventMaster.current.UnitMovingComplete(this.gameObject, unitId, this.occypiedPoses);
             return;
         }
         

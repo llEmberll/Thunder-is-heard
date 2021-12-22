@@ -11,8 +11,6 @@ public class GridTable : MonoBehaviour
 
     [SerializeField] private Dictionary<Vector3, Cell> cellsData;
 
-
-
     [ContextMenu("Generate grid")]
     private void GenerateGrid()
     {
@@ -44,11 +42,6 @@ public class GridTable : MonoBehaviour
         EventMaster.current.CellRequestByPose += AnswerCellRequest;
     }
 
-    private void Start()
-    {
-        
-        
-    }
 
     private void AnswerCellRequest(Vector3 pose)
     {
@@ -99,7 +92,7 @@ public class GridTable : MonoBehaviour
         foreach(KeyValuePair <Vector3, Cell> item in cellsData)
         {
 
-            item.Value.renderOff();
+            item.Value.renderSwitch(false);
         }
     }
 
@@ -107,7 +100,7 @@ public class GridTable : MonoBehaviour
     {
         foreach (KeyValuePair<Cell, int> item in cells)
         {
-            item.Key.renderOff();
+            item.Key.renderSwitch(false);
 
         }
     }
@@ -116,7 +109,7 @@ public class GridTable : MonoBehaviour
     {
         foreach (KeyValuePair<Cell, int> item in cells)
         {
-            item.Key.renderOn();
+            item.Key.renderSwitch(true);
            
         }
     }
