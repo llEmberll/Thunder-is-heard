@@ -5,18 +5,20 @@ using UnityEngine;
 public class Indestructible : MonoBehaviour
 {
     public Vector3[] occypiedPoses;
-    public int sizeX;
-    public int sizeZ;
+    public int sizeX, sizeZ, type, id, maxHealth, health;
     public Vector3 center;
 
     private void Awake()
     {
+        center = transform.position;
+        type = 3;
         UpdateOccypied();
         EventMaster.current.ObjectDestroyed += DestroyIndestructible;
     }
 
     private void Start()
     {
+        health = maxHealth;
         EventMaster.current.SceneAddObject(this.gameObject, occypiedPoses);
     }
 

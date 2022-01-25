@@ -5,7 +5,7 @@ public class Unit : Destructible
 {
     public int damage, mobility, distance;
     public float realSpeed;
-    public int type, unitId;
+    public int unitId;
 
     private Cell point;
     private Cell[] route;
@@ -15,7 +15,7 @@ public class Unit : Destructible
 
     public Animator animator;
 
-    public Unit(string UnitName, int Id, int MaxHealth, int Damage, int Distance, int Mobility, float RealSpeed, Transform Model)
+    public Unit(string UnitName, int Id, int MaxHealth, int Damage, int Distance, int Mobility, float RealSpeed, Transform Model = null)
     {
         this.elementName = UnitName;
         this.unitId = Id;
@@ -25,11 +25,12 @@ public class Unit : Destructible
         this.mobility = Mobility;
         this.realSpeed = RealSpeed;
         this.model = Model;
-        this.type = 0;
+        
     }
 
     private void Awake()
     {
+        type = 1;
         center = transform.position;
         sizeX = sizeZ = 1;
 
@@ -48,16 +49,20 @@ public class Unit : Destructible
         EventMaster.current.SceneAddObject(this.gameObject, occypiedPoses);
     }
 
-    private void SomeBodyAttacks(GameObject attacker, GameObject defender, Vector3 attackPoint, int damage)
+    private void SomeBodyAttacks(BattleSlot attacker, BattleSlot defender, Vector3 attackPoint, int damage)
     {
-        Debug.Log("Unit, somebody attacks!");
+        Debug.Log("Unit " + id + ", somebody attacks!");
 
-        if (attacker == this.gameObject)
+        if (attacker.id == id)
         {
+
+            Debug.Log("My id is " + id + " and im attacker");
+
             rotateToTarget(attackPoint);
         }
-        else
+        if (defender.id == id)
         {
+            Debug.Log("My id is " + id + " and im defender");
             if (DamageLethality(damage))
             {
                 EventMaster.current.UnitMoveOnRoute -= moveOnRoute;
@@ -91,10 +96,10 @@ public class Unit : Destructible
         return null;
     }
 
-    private void moveOnRoute(Vector3 unitPose, Cell[] newRoute)
+    private void moveOnRoute(int unitId, Cell[] newRoute)
     {
 
-        if (transform.position == unitPose)
+        if (unitId == id)
         {
             route = newRoute;
             occypyCell(route[0]);
@@ -142,7 +147,7 @@ public class Unit : Destructible
         {
             mustMove = false;
 
-            EventMaster.current.UnitMovingComplete(this.gameObject, unitId, this.occypiedPoses);
+            EventMaster.current.UnitMovingComplete(this.gameObject, id, this.occypiedPoses);
             return;
         }
         

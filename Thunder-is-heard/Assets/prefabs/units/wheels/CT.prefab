@@ -119,13 +119,16 @@ MonoBehaviour:
   maxHealth: 8
   health: 0
   id: 0
+  type: 0
   elementName: "\u0421\u0440\u0435\u0434\u043D\u0438\u0439 \u0442\u0430\u043D\u043A"
-  elementType: 0
+  occypiedPoses: []
+  center: {x: 0, y: 0, z: 0}
+  sizeX: 0
+  sizeZ: 0
   damage: 5
   mobility: 2
   distance: 3
   realSpeed: 1.5
-  type: 0
   unitId: 0
   model: {fileID: 664727377621096218}
   animator: {fileID: 0}

@@ -37,7 +37,7 @@ public class SelectionManager : MonoBehaviour
     private List<GameObject> allRoute;
 
     private bool playerTurn;
-    private bool idle;
+    private bool idle = true;
 
     private GameObject _preview;
     private int previewId;
@@ -46,7 +46,7 @@ public class SelectionManager : MonoBehaviour
     private Transform _selection;
 
     private Prefabs dataBase;
-    private UnitTable unitTable;
+    private UnitTable currentBattlePosition;
 
 
     private class ObjectUI
@@ -86,18 +86,20 @@ public class SelectionManager : MonoBehaviour
         EventMaster.current.DeletedPreview += DeletePreview;
 
         dataBase = GameObject.FindGameObjectWithTag("Prefabs").GetComponent<Prefabs>();
-        unitTable = GameObject.FindGameObjectWithTag("UnitTable").GetComponent<UnitTable>();
-
-        UIconfigs = new Dictionary<string, ObjectUI>() {
-            { unitTable.friendlyUnitTag, new ObjectUI(friendlyHealthColor, unitHealthBarSize, UIUnitPoseByY, friendlySelector, true, true, true) },
-            { unitTable.enemyUnitTag, new ObjectUI(enemyHealthColor, unitHealthBarSize, UIUnitPoseByY, enemySelector, true, true, true) },
-            { unitTable.friendlyBuildTag, new ObjectUI(friendlyHealthColor, buildHealthBarSize, UIBuildPoseByY, friendlySelector, false, true, false) },
-            { unitTable.enemyBuildTag, new ObjectUI(enemyHealthColor, buildHealthBarSize, UIBuildPoseByY, enemySelector, false, true, false) }
-        };
+        
     }
 
     private void Start()
     {
+        currentBattlePosition = GameObject.FindGameObjectWithTag("BattleManager").GetComponent<BattleManager>().currentPosition;
+
+        UIconfigs = new Dictionary<string, ObjectUI>() {
+            { currentBattlePosition.friendlyUnitTag, new ObjectUI(friendlyHealthColor, unitHealthBarSize, UIUnitPoseByY, friendlySelector, true, true, true) },
+            { currentBattlePosition.enemyUnitTag, new ObjectUI(enemyHealthColor, unitHealthBarSize, UIUnitPoseByY, enemySelector, true, true, true) },
+            { currentBattlePosition.friendlyBuildTag, new ObjectUI(friendlyHealthColor, buildHealthBarSize, UIBuildPoseByY, friendlySelector, false, true, false) },
+            { currentBattlePosition.enemyBuildTag, new ObjectUI(enemyHealthColor, buildHealthBarSize, UIBuildPoseByY, enemySelector, false, true, false) }
+        };
+
         fightPrepareButtons.enabled = preparePanel.enabled = true;
         fightPrepareButtons.gameObject.SetActive(true);
         preparePanel.gameObject.SetActive(true);
@@ -152,10 +154,15 @@ public class SelectionManager : MonoBehaviour
         unit.tag = "FriendlyUnit";
     }
 
+
     private void DeletePreview()
     {
-        Destroy(_preview.gameObject);
-        _preview = null;
+        if (_preview != null)
+        {
+            Destroy(_preview.gameObject);
+            _preview = null;
+        }
+        
     }
 
     private void CreatePreview(int id)
@@ -163,6 +170,8 @@ public class SelectionManager : MonoBehaviour
         UnitData unitData = dataBase.GetUnitData(id);
         previewId = id;
         previewOffsetByY = unitData.meshPose.y;
+
+        DeletePreview();
 
         _preview = Instantiate(unitData.preview, new Vector3(0, previewOffsetByY, 0), Quaternion.identity);
         _preview.transform.localScale = unitData.meshScale;
@@ -321,6 +330,7 @@ public class SelectionManager : MonoBehaviour
     {
         if (_selection != null)
         {
+
             Deselection();
         }
         SelectionHandle();
@@ -328,17 +338,18 @@ public class SelectionManager : MonoBehaviour
 
     private void showAttackers(GameObject target)
     {
-        List<GameObject> targetAttackers = GetAttackers(target);
+        Dictionary<BattleSlot, int> targetAttackers = GetAttackers(target);
         if (targetAttackers != null)
         {
             attackerSelectors = new SpriteRenderer[targetAttackers.Count];
             int index = 0;
 
-            foreach (GameObject attacker in targetAttackers)
+            foreach (KeyValuePair<BattleSlot, int> item in targetAttackers)
             {
+                BattleSlot attacker = item.Key;
                 if (attacker != null)
                 {
-                    var selector = Instantiate(friendlySelector, new Vector3(attacker.transform.position.x, 0.047f, attacker.transform.position.z), Quaternion.identity);
+                    var selector = Instantiate(friendlySelector, new Vector3(attacker.center.x, 0.047f, attacker.center.z), Quaternion.identity);
                     selector.enabled = true;
 
                     selector.name = $"selector-{index}";
@@ -362,11 +373,12 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
-    private List<GameObject> GetAttackers(GameObject element)
+    private Dictionary<BattleSlot, int> GetAttackers(GameObject element)
     {
-        if (unitTable.GetEnemyTagsByTag(unitTable.friendlyUnitTag).Contains(element.tag) && unitTable.attackersInfo.ContainsKey(element))
+        int elementId = element.GetComponent<Destructible>().id;
+        if (currentBattlePosition.GetEnemyTagsByTag(currentBattlePosition.friendlyUnitTag).Contains(element.tag) && currentBattlePosition.attackersInfo.ContainsKey(elementId))
         {
-            return unitTable.attackersInfo[element].possibleTargetAttackers;
+            return currentBattlePosition.attackersInfo[elementId].possibleAttackers;
         }
         return null;
     }
@@ -453,7 +465,7 @@ public class SelectionManager : MonoBehaviour
         Cell cell = selection.GetComponent<Cell>();
         GameObject selectionObject = cell.occypier;
 
-        if (selectionObject != null && UIconfigs.ContainsKey(selectionObject.tag))
+        if (selectionObject != null && idle && UIconfigs.ContainsKey(selectionObject.tag))
         {
             SetUI(selection, selectionObject.GetComponent<Destructible>(), UIconfigs[selectionObject.tag]);
             showAttackers(selectionObject);
@@ -465,6 +477,7 @@ public class SelectionManager : MonoBehaviour
     {
         if (_selection.CompareTag("Cell"))
         {
+            Cell cell = _selection.GetComponent<Cell>();
             GameObject obj = _selection.GetComponent<Cell>().occypier;
 
             if (obj != null)

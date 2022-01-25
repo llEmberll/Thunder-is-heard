@@ -8,15 +8,16 @@ public class GameManager : MonoBehaviour
     [SerializeField] public Unit activeUnit;
 
     private GridTable gridTable;
-    private UnitTable unitTable;
+    private UnitTable currentBattlePosition;
 
     private Cell[] landableCells;
 
     private Cell[] possibleMoveCells;
-    private Cell[] blastCells;
     private Cell[] moveRoute;
 
     private bool idle, existPreview;
+
+    private bool fightIsOver = false;
 
     private int previewId;
 
@@ -27,11 +28,14 @@ public class GameManager : MonoBehaviour
 
     private Dictionary<Cell, int> realMoveCells;
 
+    private AI AI;
+
     // Start is called before the first frame update
     void Start()
     {
         gridTable = GameObject.FindWithTag("GridTable").GetComponent<GridTable>();
-        unitTable = GameObject.FindWithTag("UnitTable").GetComponent<UnitTable>();
+        currentBattlePosition = GameObject.FindWithTag("BattleManager").GetComponent<BattleManager>().currentPosition;
+        AI = GameObject.FindWithTag("AI").GetComponent<AI>();
 
         EventMaster.current.AllPartyUnitDowned += AllUnitsDown;
         EventMaster.current.CompleteUnitMove += MoveComplete;
@@ -47,7 +51,6 @@ public class GameManager : MonoBehaviour
         turnCounter = 0;
 
         EventMaster.current.TurnChanging(playerTurn);
-        EventMaster.current.StatusTurnChanging(idle);
     }
 
 
@@ -59,6 +62,7 @@ public class GameManager : MonoBehaviour
         EventMaster.current.StartFight();
 
         idle = true;
+
         existPreview = false;
         nextTurn();
     }
@@ -91,18 +95,18 @@ public class GameManager : MonoBehaviour
         {
             if (render)
             {
-                int countRouteCells = getRouteLength(moveRoute);
+                int countRouteCells = GetRouteLength(moveRoute);
                 Cell lastRouteCell = getRouteLast(moveRoute);
 
                 if (countRouteCells < 1)
                 {
-                    Cell[] firstStep = gridTable.getRange(activeUnit.transform.position, 1, false);
+                    Cell[] firstStep = gridTable.GetRange(activeUnit.transform.position, 1, false);
                     if (canMove(cell, firstStep))
                     {
                         moveRoute[0] = cell;
                         Cell previousRouteCell = gridTable.getCellInfoByPose(activeUnit.transform.position);
 
-                        countRouteCells = getRouteLength(moveRoute);
+                        countRouteCells = GetRouteLength(moveRoute);
 
                         EventMaster.current.SelectCellForRoute(cell, previousRouteCell, activeUnit.mobility == countRouteCells);
                         return;
@@ -123,13 +127,13 @@ public class GameManager : MonoBehaviour
 
                         if (overRoute)
                         {
-                            Cell[] nextStep = gridTable.getRange(lastRouteCell.cellPose, 1, false);
+                            Cell[] nextStep = gridTable.GetRange(lastRouteCell.cellPose, 1, false);
 
                             if (canMove(cell, nextStep))
                             {
                                 moveRoute[countRouteCells] = cell;
 
-                                overRoute = activeUnit.mobility == getRouteLength(moveRoute);
+                                overRoute = activeUnit.mobility == GetRouteLength(moveRoute);
                                 EventMaster.current.SelectCellForRoute(cell, moveRoute[countRouteCells - 1], overRoute);
                             }
                         }
@@ -146,78 +150,14 @@ public class GameManager : MonoBehaviour
 
     private void ClearRoute()
     {
-        EventMaster.current.ClearingRoute();
-        moveRoute = new Cell[activeUnit.mobility];
-    }
-
-
-    private bool NeighbourCell(Vector3 pose, Vector3 cellPose)
-    {
-        if (Mathf.Max(Mathf.Abs((int)(pose.x - cellPose.x)), Mathf.Abs((int)(pose.z - cellPose.z))) == 1) return true;
-        return false;
-    }
-
-    private void updateMoveRange(Vector3 unitPose, int unitRange)
-    {
-        if (unitRange == 1)
+        if (moveRoute != null)
         {
-            foreach (Cell cell in possibleMoveCells)
-            {
-                if (cell != null)
-                {
-                    realMoveCells.Add(cell, 1);
-                }
-            }
-            return;
+            EventMaster.current.ClearingRoute();
+            moveRoute = new Cell[activeUnit.mobility];
         }
-        else
-        {
-            Cell[] firstCells = gridTable.getRange(unitPose, 1, false);
-
-            foreach (Cell firstStep in firstCells)
-            {
-                if (firstStep != null)
-                {
-                    realMoveCells.Add(firstStep, 1);
-                }
-            }
-            updateLevelsOfCells(unitRange, firstCells, 2);
-        }
+        
     }
 
-
-    private void updateLevelsOfCells(int range, Cell[] previousCells, int currentRange)
-    {
-        Cell[] newCells = new Cell[8 * currentRange];
-        int newCellsIndex = 0;
-
-        for (int index = 0; index < previousCells.Length; index++)
-        {
-            Cell currentPreviousCell = previousCells[index];
-            if (currentPreviousCell != null)
-            {
-                for (int index2 = 0; index2 < possibleMoveCells.Length; index2++)
-                {
-                    Cell currentPossibleCell = possibleMoveCells[index2];
-                    if (currentPossibleCell != null)
-                    {
-                        if (NeighbourCell(currentPreviousCell.cellPose, currentPossibleCell.cellPose))
-                        {
-                            if (!realMoveCells.ContainsKey(currentPossibleCell))
-                            {
-                                realMoveCells.Add(currentPossibleCell, currentRange);
-                                newCells[newCellsIndex] = currentPossibleCell;
-                                newCellsIndex++;
-                            }
-                            possibleMoveCells[index2] = null;
-                        }
-                    }
-                }
-            }
-        }
-        if (currentRange < range) updateLevelsOfCells(range, newCells, currentRange + 1);
-        return;
-    }
 
     private void DeleteAllRouteAfterValue(Cell cell)
     {
@@ -250,7 +190,7 @@ public class GameManager : MonoBehaviour
         moveRoute = newRoute;
     }
 
-    private int getRouteLength(Cell [] route)
+    private int GetRouteLength(Cell [] route)
     {
         int massLength = route.Length;
         for (int index = 0; index < massLength; index++)
@@ -287,36 +227,57 @@ public class GameManager : MonoBehaviour
 
     private void nextTurn()
     {
-        turnCounter++;
-
-        Debug.Log("Следующий ход: " + turnCounter);
-        playerTurn = !playerTurn;
-
-        EventMaster.current.TurnChanging(playerTurn);
-
-        Debug.Log("Очередь игрока? - " + playerTurn);
-
-        if (playerTurn)
+        if (!fightIsOver)
         {
-            if (activeUnit != null)
+            turnCounter++;
+
+            Debug.Log("Следующий ход: " + turnCounter);
+            playerTurn = !playerTurn;
+
+            EventMaster.current.TurnChanging(playerTurn);
+
+
+            Debug.Log("Очередь игрока? - " + playerTurn);
+
+            if (playerTurn)
             {
-                updateActiveCells(activeUnit.transform.position, activeUnit.mobility, activeUnit.distance);
+                if (activeUnit != null)
+                {
+                    updateActiveCells(activeUnit.transform.position, activeUnit.mobility, activeUnit.distance);
 
-                showActiveCells();
-            }                
+                    showActiveCells();
+                }
+            }
+            else
+            {
+                AISolution();
+            }
         }
-        else
-        {
-            AIsolution();
-        }
+
+        
     }
 
     
-    public void AIsolution()
+    public void AISolution()
     {
         Debug.Log("Решение ИИ");
 
-        nextTurn();
+        TurnData AIMove = AI.Action("Enemy", 2);
+
+        int AIAction = AIMove.action;
+
+        switch (AIAction)
+        {
+            case 0:
+                nextTurn();
+                break;
+            case 1:
+                AttackTarget(AIMove.target.id);
+                break;
+            case 2:
+                moveUnit(AIMove.route, AIMove.activeUnit.id);
+                break;
+        }
     }
 
     private void MoveComplete(GameObject unit, int unitId, Vector3[] unitPoses)
@@ -352,11 +313,10 @@ public class GameManager : MonoBehaviour
 
     private void updateActiveCells(Vector3 center, int moveRadius, int attackRadius)
     {
-        possibleMoveCells = gridTable.getRange(center, moveRadius, false);
-        blastCells = gridTable.getRange(center, attackRadius, true);
-        realMoveCells = new Dictionary<Cell, int>(possibleMoveCells.Length);
+        possibleMoveCells = gridTable.GetRange(center, moveRadius, false);
+        realMoveCells = gridTable.GetRealMoveCells(center, moveRadius);
 
-        updateMoveRange(center, moveRadius);
+
     }
 
     public void showActiveCells()
@@ -378,25 +338,29 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
-    private void moveUnit(Cell[] route)
+    private void moveUnit(Cell[] route, int objId)
     {
         idle = false;
         EventMaster.current.StatusTurnChanging(idle);
 
-        EventMaster.current.UnitMovingOnRoute(activeUnit.transform.position, route);
+        EventMaster.current.UnitMovingOnRoute(objId, route);
         hideActiveCells();
 
         ClearRoute();
     }
 
 
-    private void AttackTarget(List<GameObject> attackers, GameObject target)
+    private void AttackTarget(int targetId)
     {
-        Vector3 attackPoint = target.GetComponent<Destructible>().center;
+        AttackersData targetData = currentBattlePosition.attackersInfo[targetId];
+        BattleSlot target = targetData.obj;
 
-        foreach (GameObject attacker in attackers)
+        Vector3 attackPoint = target.center;
+
+        foreach (KeyValuePair<BattleSlot, int> item in targetData.possibleAttackers)
         {
-            EventMaster.current.UnitAttacking(attacker, target, attackPoint, attacker.GetComponent<Unit>().damage);
+            BattleSlot attacker = item.Key;
+            EventMaster.current.UnitAttacking(attacker, target, attackPoint, attacker.damage);
         }
 
         if (activeUnit != null)
@@ -411,12 +375,24 @@ public class GameManager : MonoBehaviour
 
     private void ClickedOnEnemy(GameObject obj)
     {
-        List<GameObject> attackers = unitTable.attackersInfo[obj].possibleTargetAttackers;
+        AttackersData objData = currentBattlePosition.attackersInfo[obj.GetComponent<Destructible>().id];
+
+        Dictionary<BattleSlot, int> attackers = objData.possibleAttackers;
         if (attackers.Count > 0)
         {
-            AttackTarget(attackers, obj);
+
+            Debug.Log("Атакующие объекта +" + obj.name);
+
+            foreach (KeyValuePair<BattleSlot, int> item in attackers)
+            {
+                Debug.Log(item.Key.id);
+            }
+
+            AttackTarget(objData.obj.id);
             return;
         }
+
+        Debug.Log("Аткующих 0!");
     }
 
     private void ObjectDestroyed(GameObject obj, Vector3[] occypiedPoses)
@@ -435,6 +411,7 @@ public class GameManager : MonoBehaviour
     private void AllUnitsDown(bool EnemyDown)
     {
         EventMaster.current.FightFinishing(EnemyDown);
+        FightIsOver(EnemyDown);
     }
 
 
@@ -446,6 +423,8 @@ public class GameManager : MonoBehaviour
             return;
         }
         Debug.Log("Поражение!");
+
+        fightIsOver = true;
     }
 
 
@@ -456,7 +435,7 @@ public class GameManager : MonoBehaviour
             ClickedOnEnemy(obj);
             return;
         }
-        if (obj.tag == unitTable.friendlyUnitTag) SetActiveUnit(obj.GetComponent<Unit>());
+        if (obj.tag == currentBattlePosition.friendlyUnitTag) SetActiveUnit(obj.GetComponent<Unit>());
 
     }
 
@@ -479,14 +458,14 @@ public class GameManager : MonoBehaviour
         {
             if (occypier != null)
             {
-                ObjectInterract(occypier, unitTable.GetEnemyTagsByTag(occypier.tag));
+                ObjectInterract(occypier, currentBattlePosition.GetEnemyTagsByTag(occypier.tag));
             }
 
             else
             {
                 if (activeUnit != null && moveRoute.Contains(cell))
                 {
-                    moveUnit(moveRoute);
+                    moveUnit(moveRoute, activeUnit.GetComponent<Destructible>().id);
                 }
             }
         }

@@ -10,7 +10,6 @@ TagManager:
   - Terrain
   - EnemyUnit
   - SelectionManager
-  - UnitTable
   - Environment
   - EventMaster
   - Model
@@ -24,6 +23,8 @@ TagManager:
   - FriendlyBuild
   - Preview
   - GridTable
+  - AI
+  - BattleManager
   layers:
   - Default
   - TransparentFX

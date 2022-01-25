@@ -38,6 +38,7 @@ public class EventMaster : MonoBehaviour
         ChangeTurn?.Invoke(playerTurn);
     }
 
+
     public event Action<bool> ChangeStatusTurn;
     public void StatusTurnChanging(bool idle)
     {
@@ -70,10 +71,10 @@ public class EventMaster : MonoBehaviour
     }
 
 
-    public event Action<Vector3, Cell[]> UnitMoveOnRoute;
-    public void UnitMovingOnRoute(Vector3 UnitPose, Cell[] route)
+    public event Action<int, Cell[]> UnitMoveOnRoute;
+    public void UnitMovingOnRoute(int unitId, Cell[] route)
     {
-        UnitMoveOnRoute?.Invoke(UnitPose, route);
+        UnitMoveOnRoute?.Invoke(unitId, route);
     }
 
     public event Action<Cell, bool> MouseOnCellEnter;
@@ -108,8 +109,8 @@ public class EventMaster : MonoBehaviour
     }
 
 
-    public event Action<GameObject, GameObject, Vector3, int> UnitAttacks;
-    public void UnitAttacking(GameObject attacker, GameObject defender, Vector3 attackPoint, int damage)
+    public event Action<BattleSlot, BattleSlot, Vector3, int> UnitAttacks;
+    public void UnitAttacking(BattleSlot attacker, BattleSlot defender, Vector3 attackPoint, int damage)
     {
         UnitAttacks?.Invoke(attacker, defender, attackPoint, damage);
     }
@@ -195,4 +196,11 @@ public class EventMaster : MonoBehaviour
     {
         ChangePreviewPose?.Invoke(preview, oldPose, newPose);
     }
+
+    public event Action<GameObject, int> ObjectChangedHealth;
+    public void ObjectHealthChange(GameObject obj, int newHealth)
+    {
+        ObjectChangedHealth?.Invoke(obj, newHealth);
+    }
+
 }

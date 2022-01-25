@@ -5,12 +5,16 @@ using UnityEngine;
 
 public class Destructible : MonoBehaviour
 {
-    [SerializeField] public int maxHealth, health, id;
+    [SerializeField] public int maxHealth, health, id, type;
     public string elementName;
     public Vector3[] occypiedPoses;
     public Vector3 center;
     public int sizeX, sizeZ;
 
+    private void Awake()
+    {
+        
+    }
 
     protected void GetDamage(int damage)
     {
@@ -18,15 +22,18 @@ public class Destructible : MonoBehaviour
 
         Debug.Log("damage = " + damage);
 
-        Debug.Log("health = " + health);
+        Debug.Log("health До урона = " + health);
 
         health -= damage;
 
+        Debug.Log("health После урона = " + health);
+
         if (health < 1) Die();
+        else EventMaster.current.ObjectHealthChange(this.gameObject, health);
         return;
     }
 
-    protected void UpdateOccypiedPoses()
+    public void UpdateOccypiedPoses()
     {
         Vector3 startPose = center = transform.position;
         if (sizeX < 2 && sizeZ < 2)
@@ -53,12 +60,15 @@ public class Destructible : MonoBehaviour
         }
     }
 
-    protected void ObjectHasBeenAttack(GameObject attacker, GameObject defender, Vector3 attackPoint, int damage)
+    protected void ObjectHasBeenAttack(BattleSlot attacker, BattleSlot defender, Vector3 attackPoint, int damage)
     {
-        Debug.Log("object" + this.name + " = " + "has been attacked");
+        
 
-        if (this.gameObject == defender)
+        if (defender.id == id)
         {
+
+            Debug.Log("object" + this.name + " with id " + id + " has been attacked");
+
             GetDamage(damage);
             return;
         }

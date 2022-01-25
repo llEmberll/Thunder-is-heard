@@ -118,14 +118,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 7
   health: 0
-  id: 0
+  id: 2
+  type: 0
   elementName: "\u0411\u041C\u041F \"\u041B\u0438\u0441\""
-  elementType: 0
+  occypiedPoses: []
+  center: {x: 0, y: 0, z: 0}
+  sizeX: 0
+  sizeZ: 0
   damage: 3
   mobility: 3
   distance: 3
   realSpeed: 2
-  type: 0
   unitId: 0
   model: {fileID: 8153573082811526523}
   animator: {fileID: 0}

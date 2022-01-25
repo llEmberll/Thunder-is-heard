@@ -112,5 +112,5 @@ MonoBehaviour:
   _hoverColor: {r: 0.020274075, g: 0.6320754, b: 0.26399243, a: 0.5058824}
   _meshRenderer: {fileID: 4308556561093108150}
   cellPose: {x: 0, y: 0, z: 0}
-  IsOccypy: 0
+  occypier: {fileID: 0}
   type: 0

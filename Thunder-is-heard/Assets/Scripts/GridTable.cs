@@ -11,6 +11,10 @@ public class GridTable : MonoBehaviour
 
     [SerializeField] private Dictionary<Vector3, Cell> cellsData;
 
+    private Dictionary<Cell, int> realMoveCells;
+
+    private Cell[] possibleMoveCells;
+
     [ContextMenu("Generate grid")]
     private void GenerateGrid()
     {
@@ -115,7 +119,74 @@ public class GridTable : MonoBehaviour
     }
 
 
-    public Cell[] getRange(Vector3 Center, int radius, bool ignoreOccypy)
+    public bool NeighbourCell(Vector3 pose, Vector3 cellPose)
+    {
+        if (Mathf.Max(Mathf.Abs((int)(pose.x - cellPose.x)), Mathf.Abs((int)(pose.z - cellPose.z))) == 1) return true;
+        return false;
+    }
+
+    public Dictionary<Cell, int> GetRealMoveCells(Vector3 unitPose, int unitRange)
+    {
+        possibleMoveCells = GetRange(unitPose, unitRange, false);
+        realMoveCells = new Dictionary<Cell, int>();
+
+        if (unitRange == 1)
+        {
+            foreach (Cell cell in possibleMoveCells)
+            {
+                if (cell != null) realMoveCells.Add(cell, 1);
+            }
+            return realMoveCells;
+        }
+        else
+        {
+            Cell[] firstCells = GetRange(unitPose, 1, false);
+
+            foreach (Cell firstStep in firstCells)
+            {
+                if (firstStep != null) realMoveCells.Add(firstStep, 1);
+            }
+            UpdateLevelsOfCells(unitRange, firstCells, 2);
+
+            return realMoveCells;
+        }
+    }
+
+
+    public void UpdateLevelsOfCells(int range, Cell[] previousCells, int currentRange)
+    {
+        Cell[] newCells = new Cell[8 * currentRange];
+        int newCellsIndex = 0;
+
+        for (int index = 0; index < previousCells.Length; index++)
+        {
+            Cell currentPreviousCell = previousCells[index];
+            if (currentPreviousCell != null)
+            {
+                for (int index2 = 0; index2 < possibleMoveCells.Length; index2++)
+                {
+                    Cell currentPossibleCell = possibleMoveCells[index2];
+                    if (currentPossibleCell != null)
+                    {
+                        if (NeighbourCell(currentPreviousCell.cellPose, currentPossibleCell.cellPose))
+                        {
+                            if (!realMoveCells.ContainsKey(currentPossibleCell))
+                            {
+                                realMoveCells.Add(currentPossibleCell, currentRange);
+                                newCells[newCellsIndex] = currentPossibleCell;
+                                newCellsIndex++;
+                            }
+                            possibleMoveCells[index2] = null;
+                        }
+                    }
+                }
+            }
+        }
+        if (currentRange < range) UpdateLevelsOfCells(range, newCells, currentRange + 1);
+        return;
+    }
+
+    public Cell[] GetRange(Vector3 Center, int radius, bool ignoreOccypy)
     {
         int minX = (int)Center.x - radius;
 

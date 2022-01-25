@@ -15,11 +15,11 @@ public class Build : Destructible
         this.sizeX = SizeX;
         this.sizeZ = SizeZ;
         this.elementName = BuildName;
-        
     }
 
     private void Awake()
     {
+        type = 2;
         EventMaster.current.UnitAttacks += ObjectHasBeenAttack;
     }
 
