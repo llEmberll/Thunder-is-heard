@@ -10,6 +10,7 @@ public class AI : MonoBehaviour
     private GridTable gridTable;
     private BattleManager battleManager;
     private TurnData bestMove, currentParentMove;
+    private UnitTable positionInBestMove;
     private float evaluationByBestMove, evaluationByCurrentParentMove;
 
 
@@ -30,36 +31,21 @@ public class AI : MonoBehaviour
 
         Debug.Log("Все ходы получены!");
 
-        foreach (KeyValuePair<TurnData, UnitTable> item in AllTurns)
-        {
-            if (item.Key.action == 1)
-            {
-                Debug.Log("Атака объекта " + item.Key.target.id);
-            }
-            else if (item.Key.action == 2)
-            {
-                Debug.Log("Передвижения объекта " + item.Key.activeUnit.id + " в точку " + item.Key.point.cellPose);
-            }
+        //foreach (KeyValuePair<TurnData, UnitTable> item in AllTurns)
+        //{
+        //    if (item.Key.action == 1)
+        //    {
+        //        Debug.Log("Атака объекта " + item.Key.target.id);
+        //    }
+        //    else if (item.Key.action == 2)
+        //    {
+        //        Debug.Log("Передвижения объекта " + item.Key.activeUnit.id + " в точку " + item.Key.point.cellPose);
+        //    }
 
-            Debug.Log("Оценка: " + item.Value.positionEvaluation);
-        }
+        //    Debug.Log("Оценка: " + item.Value.positionEvaluation);
+        //}
 
         bestMove = GetBestTurn(AllTurns);
-
-        Debug.Log("Лучший ход:");
-        
-        if (bestMove.action == 0) Debug.Log("Ожидание");
-        else
-        {
-            if (bestMove.action == 1)
-            {
-                Debug.Log("Атаковать цель с id: " + bestMove.target.id);
-            }
-            else
-            {
-                Debug.Log("Передвигаться юнитом  с id " + bestMove.activeUnit.id + " в точку " + bestMove.point.cellPose);
-            }
-        }
 
         bestMove = BuildRoute(bestMove, bestMove.activeUnit);
 
@@ -71,21 +57,10 @@ public class AI : MonoBehaviour
     }
 
 
-    private void UpgradePositionsEvaluation(Dictionary<TurnData, UnitTable> positions)
-    {
-
-    }
-
 
     private TurnData BuildRoute(TurnData move, BattleSlot activeObj = null)
     {
         if (activeObj == null || move.action != 2 || move.point == null) return move;
-
-        Debug.Log("Build route. unit center now: " + activeObj.center);
-
-
-        Debug.Log("unit mobility: " + activeObj.mobility);
-
 
         Dictionary<Cell, int> realMoveCells = gridTable.GetRealMoveCells(activeObj.center, activeObj.mobility);
 
@@ -173,72 +148,162 @@ public class AI : MonoBehaviour
         float nearestDistanceToEnemy = battleManager.currentPosition.nearestDistanceToEnemy;
 
         bestMove = new TurnData(0);
+        positionInBestMove = battleManager.currentPosition;
+
+        bool stalemate = false;
+
 
         foreach (KeyValuePair<TurnData, UnitTable> item in turns)
         {
+
+            Debug.Log("Начало поиска хода, stalemate = " + stalemate);
+
+
             if (item.Key.action == 1)
             {
-                if (bestMove.action == 1 && item.Value.positionEvaluation * AISide < bestEvaluation)
+                if (!item.Value.attackersInfo.ContainsKey(item.Key.target.id))
                 {
-
+                    positionInBestMove = item.Value;
+                    bestMove = item.Key;
+                    bestEvaluation = positionInBestMove.positionEvaluation * AISide;
                 }
                 else
                 {
-                    AttackersData attackersData = item.Value.attackersInfo[item.Key.target.id];
-                    if (attackersData.inputDamage >= attackersData.obj.health)
+                    if (bestMove.action == 1 && positionInBestMove.attackersInfo[bestMove.target.id].possibleUnitTargets.Count > item.Value.attackersInfo[item.Key.target.id].possibleUnitTargets.Count)
                     {
-                        bestMove = item.Key;
-                        bestEvaluation = item.Value.positionEvaluation * AISide;
+
                     }
                     else
                     {
-                        int AITurnsToKill = Mathf.CeilToInt(attackersData.obj.health / attackersData.inputDamage);
-                        int enemyTurnsToKill = 9999;
-                        foreach (KeyValuePair<BattleSlot, int> targetData in attackersData.possibleTargets)
-                        {
-                            int currentTurnsToKill = Mathf.CeilToInt(targetData.Key.health / targetData.Value);
-                            if (currentTurnsToKill < enemyTurnsToKill) enemyTurnsToKill = currentTurnsToKill;
-                            if (enemyTurnsToKill < AITurnsToKill) break;
-                        }
-                        if (enemyTurnsToKill > AITurnsToKill)
-                        {
-                            bestMove = item.Key;
-                            bestEvaluation = item.Value.positionEvaluation * AISide;
-                        }
+                        positionInBestMove = item.Value;
+                        bestMove = item.Key;
+                        bestEvaluation = positionInBestMove.positionEvaluation * AISide;
                     }
                 }
                 
+                
             }
-            else if (item.Value.positionEvaluation * AISide > bestEvaluation)
+            else if (item.Key.action == 2)
             {
                 if (bestMove.action != 1)
                 {
-                    bestMove = item.Key;
-                    bestEvaluation = item.Value.positionEvaluation * AISide;
-                    if (bestMove.action == 2) nearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
-                }
+                    AttackersData activeUnitDataCurrent = item.Value.attackersInfo[item.Key.activeUnit.id];
+                    AttackersData activeUnitDataInBestMove = positionInBestMove.attackersInfo[item.Key.activeUnit.id];
 
-                
-
-            }
-
-            else if (item.Value.positionEvaluation * AISide == bestEvaluation)
-            {
-                if (item.Key.action == 2 && bestMove.action == 2)
-                {
-                    float newNearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
-                    if (newNearestDistanceToEnemy < nearestDistanceToEnemy)
+                    if (activeUnitDataCurrent.possibleUnitTargets.Count > activeUnitDataInBestMove.possibleUnitTargets.Count)
                     {
-                        bestMove = item.Key;
-                        bestEvaluation = item.Value.positionEvaluation * AISide;
-                        nearestDistanceToEnemy = newNearestDistanceToEnemy;
+                        if (activeUnitDataCurrent.inputDamage == 0)
+                        {
+                            positionInBestMove = item.Value;
+                            bestMove = item.Key;
+                            bestEvaluation = item.Value.positionEvaluation * AISide;
+                            nearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
+                        }
+                        else
+                        {
+                            if (activeUnitDataInBestMove.inputDamage != 0)
+                            {
+                                if (Mathf.CeilToInt(activeUnitDataCurrent.obj.health / activeUnitDataCurrent.inputDamage) > Mathf.CeilToInt(activeUnitDataInBestMove.obj.health / activeUnitDataInBestMove.inputDamage))
+                                {
+                                    positionInBestMove = item.Value;
+                                    bestMove = item.Key;
+                                    bestEvaluation = item.Value.positionEvaluation * AISide;
+                                    nearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
+                                }
+                            }
+                            else
+                            {
+                                if (activeUnitDataCurrent.obj.health > activeUnitDataCurrent.inputDamage)
+                                {
+                                    positionInBestMove = item.Value;
+                                    bestMove = item.Key;
+                                    bestEvaluation = item.Value.positionEvaluation * AISide;
+                                    nearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
+                                }
+                                else
+                                {
+                                    if (battleManager.currentPosition.positionEvaluation > 0)
+                                    {
+                                        positionInBestMove = item.Value;
+                                        bestMove = item.Key;
+                                        bestEvaluation = item.Value.positionEvaluation * AISide;
+                                        nearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
+                                    }
+                                    else
+                                    {
+                                        if (stalemate)
+                                        {
+                                            positionInBestMove = item.Value;
+                                            bestMove = item.Key;
+                                            bestEvaluation = item.Value.positionEvaluation * AISide;
+                                            nearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                        }
+                        
+                        
+                    }
+                    else if (activeUnitDataCurrent.possibleUnitTargets.Count == activeUnitDataInBestMove.possibleUnitTargets.Count)
+                    {
+                        if (activeUnitDataCurrent.inputDamage < activeUnitDataInBestMove.inputDamage)
+                        {
+                            positionInBestMove = item.Value;
+                            bestMove = item.Key;
+                            bestEvaluation = item.Value.positionEvaluation * AISide;
+                            nearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
+                        }
+                        else if (activeUnitDataCurrent.inputDamage == activeUnitDataInBestMove.inputDamage)
+                        {
+                            float newNearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
+                            if (newNearestDistanceToEnemy < positionInBestMove.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit)
+                            {
+
+                                positionInBestMove = item.Value;
+                                bestMove = item.Key;
+                                bestEvaluation = item.Value.positionEvaluation * AISide;
+                                nearestDistanceToEnemy = item.Value.attackersInfo[item.Key.activeUnit.id].distanceToNearestEnemyUnit;
+                            }
+                            
+                        }
+
                     }
                     
                 }
+
+                stalemate = CheckForStalemate(positionInBestMove);
+                Debug.Log("Завершение поиска хода, stalemate = " + stalemate);
+                
+
             }
         }
         return bestMove;
     }
+
+
+    private bool CheckForStalemate(UnitTable position)
+    {
+        float maxDistanceDifferenceBetweenUnits = 0;
+        float minDistanceDifferenceBetweenUnits = 9999;
+        foreach (KeyValuePair<int, AttackersData> item in position.attackersInfo)
+        {
+            if (item.Value.obj.tag.Contains("Unit"))
+            {
+                float currentDifference = item.Value.distanceToNearestEnemyUnit;
+
+                Debug.Log("расстояние до  ближайшего юнита, объект " + item.Value.obj.id + " :" + currentDifference);
+
+                if (currentDifference > maxDistanceDifferenceBetweenUnits) maxDistanceDifferenceBetweenUnits = currentDifference;
+                if (currentDifference < minDistanceDifferenceBetweenUnits) minDistanceDifferenceBetweenUnits = currentDifference;
+                if (Mathf.Abs(maxDistanceDifferenceBetweenUnits - minDistanceDifferenceBetweenUnits) > 1) return false;
+            }
+            
+        }
+        return true;
+    }
+
 
     private TurnData GetFirstTurn(Dictionary<TurnData, UnitTable> turns)
     {

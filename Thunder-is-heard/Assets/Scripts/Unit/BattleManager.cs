@@ -568,6 +568,7 @@ public class UnitTable
     public int side = -1;
     public Dictionary<BattleSlot, int> possibleAttackers = new Dictionary<BattleSlot, int>();
     public Dictionary<BattleSlot, int> possibleTargets = new Dictionary<BattleSlot, int>();
+    public Dictionary<BattleSlot, int> possibleUnitTargets = new Dictionary<BattleSlot, int>();
     public int inputDamage = 0;
     public int outputDamage = 0;
     public float evaluation = 0;
@@ -585,9 +586,11 @@ public class UnitTable
     public AttackersData Clone()
     {
         AttackersData Clone = new AttackersData(obj.Clone());
-        Clone.side = side; Clone.inputDamage = inputDamage; Clone.outputDamage = outputDamage; Clone.evaluation = evaluation;
+        Clone.side = side; Clone.inputDamage = inputDamage; Clone.outputDamage = outputDamage; Clone.evaluation = evaluation; Clone.distanceToNearestEnemyUnit = distanceToNearestEnemyUnit;
         Clone.possibleAttackers = CopyAttackersDataCollectionToNew(possibleAttackers);
         Clone.possibleTargets = CopyAttackersDataCollectionToNew(possibleTargets);
+        Clone.possibleUnitTargets = CopyAttackersDataCollectionToNew(possibleUnitTargets);
+
         return Clone;
     }
 
@@ -693,6 +696,12 @@ public class UnitTable
                 possibleTargets.Remove(item.Key);
 
                 UpdateEvaluation();
+
+                if (possibleUnitTargets.ContainsKey(item.Key))
+                {
+                    possibleUnitTargets.Remove(item.Key);
+                }
+
                 break;
             }
         }
@@ -708,6 +717,11 @@ public class UnitTable
             outputDamage += damageToTarget;
             possibleTargets.Add(target, damageToTarget);
             UpdateEvaluation();
+
+            if (target.tag.Contains("Unit"))
+            {
+                possibleUnitTargets.Add(target, damageToTarget);
+            }
         }
 
     }
@@ -720,6 +734,11 @@ public class UnitTable
             possibleTargets.Remove(target);
             
             UpdateEvaluation();
+
+            if (possibleUnitTargets.ContainsKey(target))
+            {
+                possibleUnitTargets.Remove(target);
+            }
         }
     }
 
@@ -734,7 +753,7 @@ public class UnitTable
                 inputDamage = obj.health;
                 
             }
-            float powerByStats = ((obj.health - (inputDamage) + (obj.damage + GetDamageForUnits()) + (obj.mobility / 2)) + (3 * obj.distance));
+            float powerByStats = ((obj.health - (inputDamage) + (obj.damage + GetDamageForUnits()) + (obj.mobility / 2)) + (4 * obj.distance));
 
             evaluation = ((powerByStats * side));
         }

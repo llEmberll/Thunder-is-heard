@@ -118,9 +118,10 @@ public class SelectionManager : MonoBehaviour
     {
         Destroy(fightPrepareButtons.gameObject);
         Destroy(preparePanel.gameObject);
+
         fightButtons.gameObject.SetActive(true);
         fightButtons.enabled = true;
-        _preview = null;
+        DeletePreview();
 
     }
 

@@ -448,7 +448,6 @@ public class GameManager : MonoBehaviour
             if (cell.occypier == null)
             {
                 EventMaster.current.SpawnUnit(cell, previewId);
-                DeletePreview();
 
             }
             return;
