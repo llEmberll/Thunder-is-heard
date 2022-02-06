@@ -108,7 +108,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f53ac9f71749a14b84d69e80ec854ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _standartColor: {r: 0.5019608, g: 0.75294125, b: 0.3019608, a: 0}
+  _standartColor: {r: 0, g: 0, b: 0, a: 0.16078432}
   _hoverColor: {r: 0.020274075, g: 0.6320754, b: 0.26399243, a: 0.5058824}
   _meshRenderer: {fileID: 4308556561093108150}
   cellPose: {x: 0, y: 0, z: 0}

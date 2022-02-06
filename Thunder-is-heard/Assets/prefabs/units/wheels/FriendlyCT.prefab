@@ -33,7 +33,7 @@ GameObject:
   - component: {fileID: 291118933852615842}
   - component: {fileID: 291118933852615841}
   m_Layer: 0
-  m_Name: CT
+  m_Name: FriendlyCT
   m_TagString: FriendlyUnit
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

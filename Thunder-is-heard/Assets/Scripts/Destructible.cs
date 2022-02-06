@@ -18,15 +18,7 @@ public class Destructible : MonoBehaviour
 
     protected void GetDamage(int damage)
     {
-        Debug.Log("Get damaged! " + this.name);
-
-        Debug.Log("damage = " + damage);
-
-        Debug.Log("health До урона = " + health);
-
         health -= damage;
-
-        Debug.Log("health После урона = " + health);
 
         if (health < 1) Die();
         else EventMaster.current.ObjectHealthChange(this.gameObject, health);
@@ -41,24 +33,74 @@ public class Destructible : MonoBehaviour
             occypiedPoses = new Vector3[] { startPose };
             return;
         }
+
         occypiedPoses = new Vector3[sizeX * sizeZ];
 
-        Vector3 bounds = startPose + transform.right * sizeX + transform.forward * sizeZ;
-        int maxX = (int)bounds.x;
-        int maxZ = (int)bounds.z;
+        BringLocalByRotation();
 
-        center = new Vector3((transform.position.x + maxX - 1) / 2, 0, (transform.position.z + maxZ - 1) / 2);
+        Vector3 stepByX = FindStepsForFillOcypyByX();
+        Vector3 stepByZ = FindStepsForFillOcypyByZ();
+
+        int maxX = (int)startPose.x + ((int)stepByX.x * sizeX);
+        int maxZ = (int)startPose.z + ((int)stepByZ.z * sizeZ);
+
+        center = new Vector3(((transform.position.x + (maxX - stepByX.x))) / 2, 0, ((transform.position.z + (maxZ - stepByZ.z))) / 2);
+
+        Vector3 currentPose = startPose;
 
         int index = 0;
-        for (int x = (int)startPose.x; x < maxX; x++)
+        for (int x = (int)startPose.x; ;)
         {
-            for (int z = (int)startPose.z; z < maxZ; z++)
+            x = (int)currentPose.x;
+            if (x == maxX)
             {
-                occypiedPoses[index] = transform.right * x + transform.forward * z;
-                index++;
+                break;
             }
+            for (int z = (int)startPose.z; ;)
+            {
+                z = (int)currentPose.z;
+                if (z == maxZ)
+                {
+                    break;
+                }
+
+                occypiedPoses[index] = new Vector3(currentPose.x, 0, currentPose.z);
+                index++;
+                currentPose = currentPose + stepByZ;
+
+            }
+            currentPose = currentPose + stepByX;
+            currentPose.z = startPose.z;
         }
     }
+
+
+    private void BringLocalByRotation()
+    {
+        if (transform.eulerAngles.y == 90 || transform.eulerAngles.y == 270)
+        {
+            int oldSizeX = sizeX;
+            sizeX = sizeZ;
+            sizeZ = oldSizeX;
+        }
+    }
+
+
+    private Vector3 FindStepsForFillOcypyByX()
+    {
+        if (transform.forward.x != 0) return transform.forward;
+        if (transform.right.x != 0) return transform.right;
+        return new Vector3(0, 0, 0);
+    }
+
+
+    private Vector3 FindStepsForFillOcypyByZ()
+    {
+        if (transform.right.z != 0) return transform.right;
+        if (transform.forward.z != 0) return transform.forward;
+        return new Vector3(0, 0, 0);
+    }
+
 
     protected void ObjectHasBeenAttack(BattleSlot attacker, BattleSlot defender, Vector3 attackPoint, int damage)
     {
@@ -66,9 +108,6 @@ public class Destructible : MonoBehaviour
 
         if (defender.id == id)
         {
-
-            Debug.Log("object" + this.name + " with id " + id + " has been attacked");
-
             GetDamage(damage);
             return;
         }
@@ -78,8 +117,6 @@ public class Destructible : MonoBehaviour
     {
         if (damage >= health)
         {
-            Debug.Log(this.name + " || damage = " + damage + " || health = " + health);
-
             return true;
         }
         return false;

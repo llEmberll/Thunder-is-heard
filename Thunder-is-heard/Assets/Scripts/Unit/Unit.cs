@@ -51,18 +51,14 @@ public class Unit : Destructible
 
     private void SomeBodyAttacks(BattleSlot attacker, BattleSlot defender, Vector3 attackPoint, int damage)
     {
-        Debug.Log("Unit " + id + ", somebody attacks!");
 
         if (attacker.id == id)
         {
-
-            Debug.Log("My id is " + id + " and im attacker");
 
             rotateToTarget(attackPoint);
         }
         if (defender.id == id)
         {
-            Debug.Log("My id is " + id + " and im defender");
             if (DamageLethality(damage))
             {
                 EventMaster.current.UnitMoveOnRoute -= moveOnRoute;

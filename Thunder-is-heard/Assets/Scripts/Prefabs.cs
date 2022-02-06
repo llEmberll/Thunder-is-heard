@@ -8,6 +8,9 @@ public class Prefabs : MonoBehaviour
     [SerializeField] private GameObject CT;
     [SerializeField] private GameObject lis;
 
+    [SerializeField] private Sprite CTImage;
+    [SerializeField] private Sprite lisImage;
+
     private Dictionary<int, UnitData> units = new Dictionary<int, UnitData>();
 
     private int currentIdKey;
@@ -16,8 +19,8 @@ public class Prefabs : MonoBehaviour
     private void Awake()
     {
         currentIdKey = 0;
-        AddUnit(lis, currentIdKey);
-        AddUnit(CT, currentIdKey);
+        AddUnit(lis, currentIdKey, lisImage);
+        AddUnit(CT, currentIdKey, CTImage);
     }
 
     
@@ -32,7 +35,7 @@ public class Prefabs : MonoBehaviour
 
     }
 
-    private void AddUnit(GameObject element, int elementId)
+    private void AddUnit(GameObject element, int elementId, Sprite image = null)
     {
         if (element != null)
         {
@@ -49,7 +52,7 @@ public class Prefabs : MonoBehaviour
 
             Vector3 meshScale = new Vector3((prefab.transform.localScale.x * element.transform.localScale.x), (prefab.transform.localScale.y * element.transform.localScale.y), (prefab.transform.localScale.z * element.transform.localScale.z));
 
-            UnitData newUnitRecord = new UnitData(unitClass.elementName, elementId, unitClass.maxHealth, unitClass.damage, unitClass.distance, unitClass.mobility, unitClass.realSpeed, prefab.transform.position, meshScale, prefab, preview);
+            UnitData newUnitRecord = new UnitData(unitClass.elementName, elementId, unitClass.maxHealth, unitClass.damage, unitClass.distance, unitClass.mobility, unitClass.realSpeed, prefab.transform.position, meshScale, prefab, preview, image);
 
             if (!units.ContainsKey(elementId))
             {
@@ -67,11 +70,12 @@ public class UnitData
     public float realSpeed;
     public Vector3 meshPose;
     public Vector3 meshScale;
+    public Sprite previewImage;
     public GameObject prefab;
     public GameObject preview;
 
 
-    public UnitData(string Name, int Id, int MaxHealth, int Damage, int Distance, int Mobility, float speed, Vector3 MeshPose, Vector3 MeshScale, GameObject Prefab, GameObject Preview)
+    public UnitData(string Name, int Id, int MaxHealth, int Damage, int Distance, int Mobility, float speed, Vector3 MeshPose, Vector3 MeshScale, GameObject Prefab, GameObject Preview, Sprite image = null)
     {
         this.name = Name;
         this.id = Id;
@@ -84,5 +88,6 @@ public class UnitData
         this.meshScale = MeshScale;
         this.prefab = Prefab;
         this.preview = Preview;
+        this.previewImage = image;
     }
 }

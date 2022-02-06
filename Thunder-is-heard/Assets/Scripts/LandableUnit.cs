@@ -10,6 +10,8 @@ public class LandableUnit : MonoBehaviour, IPointerEnterHandler
 
     public Text UIHealth, UIDamage, UIDistance, UIMobility, countText;
 
+    public Sprite image;
+
     private void Awake()
     {
         EventMaster.current.FightIsStarted += StartFight;
@@ -33,8 +35,6 @@ public class LandableUnit : MonoBehaviour, IPointerEnterHandler
 
     public void OnClick()
     {
-        Debug.Log("Click!");
-
         if (count > 0)
         {
             EventMaster.current.CreatePreview(previewId);
@@ -50,8 +50,6 @@ public class LandableUnit : MonoBehaviour, IPointerEnterHandler
 
     public void OnPointerEnter(PointerEventData data)
     {
-        Debug.Log("OnSelect called.");
-
         UIHealth.text = Health; UIDamage.text = Damage; UIDistance.text = Distance; UIMobility.text = Mobility;
     }
 

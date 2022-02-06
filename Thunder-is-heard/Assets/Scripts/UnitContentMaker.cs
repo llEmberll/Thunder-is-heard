@@ -49,6 +49,8 @@ public class UnitContentMaker : MonoBehaviour
 
         instance.transform.Find("Name").GetComponent<Text>().text = unitData.name;
         instance.transform.Find("Count").GetComponent<Text>().text = $"x{count}";
+        instance.GetComponent<Image>().sprite = unitData.previewImage;
+
         instance.tag = "LandableUnit";
         LandableUnit instanceClass = instance.GetComponent<LandableUnit>();
         instanceClass.buttonId = elementsCount;

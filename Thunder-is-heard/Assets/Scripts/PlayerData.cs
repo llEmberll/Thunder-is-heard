@@ -19,7 +19,7 @@ public class PlayerData : MonoBehaviour
     private void Start()
     {
         units.Add(0, 2);
-        units.Add(1, 2);
+        units.Add(1, 3);
 
     }
 

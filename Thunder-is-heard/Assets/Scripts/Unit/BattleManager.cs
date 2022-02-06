@@ -266,20 +266,22 @@ public class UnitTable
     }
 
 
-
-    public float GetNearestEnemyUnitDistanceByUnit(BattleSlot unit)
+    public float SetNearestEnemyUnitDistanceByUnit(AttackersData unitRecord, string enemyTag)
     {
-        float distance = 9999;
-        List<BattleSlot> enemyUnits = collections[GetEnemyUnitTagByTag(unit.tag)];
-        foreach (BattleSlot enemyUnit in enemyUnits)
+        float nearestDistance = 9999;
+
+        foreach (BattleSlot enemy in collections[enemyTag])
         {
-            float newDistance = Vector3.Distance(unit.center, enemyUnit.center);
-            if (newDistance < distance)
+            float newDistance = Vector3.Distance(enemy.center, unitRecord.obj.center);
+            if (newDistance < nearestDistance)
             {
-                distance = newDistance;
+
+                unitRecord.nearestUnit = enemy;
+                nearestDistance = newDistance;
             }
         }
-        return distance;
+        unitRecord.distanceToNearestEnemyUnit = nearestDistance;
+        return nearestDistance;
     }
 
 
@@ -307,8 +309,7 @@ public class UnitTable
 
                 if (obj.tag.Contains("Unit"))
                 {
-                    float unitDistanceToEnemy = GetNearestEnemyUnitDistanceByUnit(obj);
-                    attackersInfo[obj.id].distanceToNearestEnemyUnit = unitDistanceToEnemy;
+                    float unitDistanceToEnemy = SetNearestEnemyUnitDistanceByUnit(attackersInfo[obj.id], GetEnemyUnitTagByTag(obj.tag));
                     if (unitDistanceToEnemy > nearestDistanceToEnemy) nearestDistanceToEnemy = unitDistanceToEnemy;
                     GlobalUpdateNearestUnitToEnemyByTag(GetEnemyUnitTagByTag(obj.tag));
                 }
@@ -323,7 +324,7 @@ public class UnitTable
         List<BattleSlot> units = collections[unitsTag];
         foreach (BattleSlot unit in units)
         {
-            attackersInfo[unit.id].distanceToNearestEnemyUnit = GetNearestEnemyUnitDistanceByUnit(unit);
+            SetNearestEnemyUnitDistanceByUnit(attackersInfo[unit.id], GetEnemyUnitTagByTag(unit.tag));
         }
     }
 
@@ -417,9 +418,6 @@ public class UnitTable
         AttackersData attackersData = new AttackersData((element));
 
         UpdateAttackers(element, poses, possibleAttackers, attackersData);
-
-
-        
 
         attackersInfo.Add(element.id, attackersData);
 
@@ -574,6 +572,7 @@ public class UnitTable
     public float evaluation = 0;
 
     public float distanceToNearestEnemyUnit = 9999;
+    public BattleSlot nearestUnit;
 
     public AttackersData(BattleSlot element)
     {
@@ -586,7 +585,7 @@ public class UnitTable
     public AttackersData Clone()
     {
         AttackersData Clone = new AttackersData(obj.Clone());
-        Clone.side = side; Clone.inputDamage = inputDamage; Clone.outputDamage = outputDamage; Clone.evaluation = evaluation; Clone.distanceToNearestEnemyUnit = distanceToNearestEnemyUnit;
+        Clone.side = side; Clone.inputDamage = inputDamage; Clone.outputDamage = outputDamage; Clone.evaluation = evaluation; Clone.distanceToNearestEnemyUnit = distanceToNearestEnemyUnit; Clone.nearestUnit = nearestUnit;
         Clone.possibleAttackers = CopyAttackersDataCollectionToNew(possibleAttackers);
         Clone.possibleTargets = CopyAttackersDataCollectionToNew(possibleTargets);
         Clone.possibleUnitTargets = CopyAttackersDataCollectionToNew(possibleUnitTargets);

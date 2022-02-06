@@ -1,10 +1,11 @@
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GridTable : MonoBehaviour
 {
-    [SerializeField] private Vector2Int _gridSize;
+    [SerializeField] public Vector2Int _gridSize;
     [SerializeField] private Cell _prefab;
     [SerializeField] private float _offset;
     [SerializeField] private Transform _parent;
@@ -119,15 +120,27 @@ public class GridTable : MonoBehaviour
     }
 
 
+    public void turnOnSomeCellsByMass(Cell[] cells)
+    {
+        for (int index = 0; index < cells.Length; index++)
+        {
+            if (cells[index] != null)
+            {
+                cells[index].renderSwitch(true);
+            }
+        }
+    }
+
+
     public bool NeighbourCell(Vector3 pose, Vector3 cellPose)
     {
         if (Mathf.Max(Mathf.Abs((int)(pose.x - cellPose.x)), Mathf.Abs((int)(pose.z - cellPose.z))) == 1) return true;
         return false;
     }
 
-    public Dictionary<Cell, int> GetRealMoveCells(Vector3 unitPose, int unitRange)
+    public Dictionary<Cell, int> GetRealMoveCells(Vector3 unitPose, int unitRange, string excTag = null)
     {
-        possibleMoveCells = GetRange(unitPose, unitRange, false);
+        possibleMoveCells = GetRange(unitPose, unitRange, false, excTag);
         realMoveCells = new Dictionary<Cell, int>();
 
         if (unitRange == 1)
@@ -140,7 +153,7 @@ public class GridTable : MonoBehaviour
         }
         else
         {
-            Cell[] firstCells = GetRange(unitPose, 1, false);
+            Cell[] firstCells = GetRange(unitPose, 1, false, excTag);
 
             foreach (Cell firstStep in firstCells)
             {
@@ -186,7 +199,34 @@ public class GridTable : MonoBehaviour
         return;
     }
 
-    public Cell[] GetRange(Vector3 Center, int radius, bool ignoreOccypy)
+
+
+    private bool ISExistOnCellsByTag(Dictionary<Cell, int> cells, string objTag)
+    {
+        Debug.Log("Тег врага - " + objTag);
+
+        foreach (KeyValuePair<Cell, int> item in cells)
+        {
+            GameObject currentOccypier = item.Key.occypier;
+
+            Debug.Log("Клетка " + item.Key.cellPose);
+
+            if (currentOccypier != null) {
+
+                Debug.Log("Оккупант не null, имя - " + currentOccypier.name + " , tag = " + currentOccypier.tag);
+                if (currentOccypier.tag == objTag)
+                {
+                    Debug.Log("Совпадает с тегом enemy!");
+                    return true;
+                }
+                }
+
+        }
+        return false;
+    }
+
+
+    public Cell[] GetRange(Vector3 Center, int radius, bool ignoreOccypy, string excTag = null)
     {
         int minX = (int)Center.x - radius;
 
@@ -215,7 +255,7 @@ public class GridTable : MonoBehaviour
                 if (cellsData.ContainsKey(currentPose))
                 {
                     Cell currentCell = cellsData[currentPose];
-                    if (currentCell.occypier == null)
+                    if (currentCell.occypier == null || ignoreOccypy)
                     {
                         if (currentCell.cellPose != Center)
                         {
@@ -226,7 +266,7 @@ public class GridTable : MonoBehaviour
 
                     else
                     {
-                        if (ignoreOccypy)
+                        if (excTag != null && currentCell.occypier.tag.Contains(excTag))
                         {
                             cells[cellSelector] = currentCell;
                             cellSelector++;

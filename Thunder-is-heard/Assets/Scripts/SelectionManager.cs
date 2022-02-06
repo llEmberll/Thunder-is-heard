@@ -184,7 +184,7 @@ public class SelectionManager : MonoBehaviour
         Vector3 newPose = selection.transform.position;
         _preview.transform.position = new Vector3(newPose.x, previewOffsetByY, newPose.z);
 
-        if (selection.GetComponent<Cell>().occypier != null)
+        if (selection.GetComponent<MeshRenderer>().enabled == false)
         {
             ChangePreviewColor(0.3f);
         }
@@ -320,6 +320,7 @@ public class SelectionManager : MonoBehaviour
     private void ChangeStatusTurn(bool status)
     {
         idle = status;
+        if (!idle) TurnOffUI();
     }
 
     private void TurnOffUI()

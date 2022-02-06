@@ -51,8 +51,32 @@ public class GameManager : MonoBehaviour
         turnCounter = 0;
 
         EventMaster.current.TurnChanging(playerTurn);
+
+        gridTable.turnOffCells();
+        GetLandableCells();
+        gridTable.turnOnSomeCellsByMass(landableCells);
     }
 
+
+    private void GetLandableCells()
+    {
+        Vector3[] landablePoints = new Vector3[] { new Vector3(0, 0, 0), new Vector3(1, 0, 0), new Vector3(2, 0, 0), new Vector3(3, 0, 0), new Vector3(4, 0, 0),
+        new Vector3(5, 0, 0), new Vector3(6, 0, 0), new Vector3(7, 0, 0), new Vector3(8, 0, 0), new Vector3(9, 0, 0), new Vector3(10, 0, 0), new Vector3(11, 0, 0),
+        new Vector3(0, 0, 1), new Vector3(2, 0, 1), new Vector3(3, 0, 1), new Vector3(4, 0, 1), new Vector3(6, 0, 1), new Vector3(7, 0, 1), new Vector3(9, 0, 1),
+        new Vector3(10, 0, 1), new Vector3(11, 0, 1), new Vector3(3, 0, 2), new Vector3(4, 0, 2), new Vector3(7, 0, 2), new Vector3(8, 0, 2), new Vector3(9, 0, 2),
+        new Vector3(10, 0, 2), new Vector3(4, 0, 3), new Vector3(7, 0, 3), new Vector3(8, 0, 3), new Vector3(9, 0, 3),
+        new Vector3(0, 0, 14), new Vector3(0, 0, 15), new Vector3(0, 0, 16), new Vector3(1, 0, 15), new Vector3(1, 0, 16)
+        };
+
+        landableCells = new Cell[landablePoints.Length];
+
+
+        for (int index = 0; index < landableCells.Length; index++)
+        {
+            landableCells[index] = gridTable.getCellInfoByPose(landablePoints[index]);
+        }
+
+    }
 
     public void StartFight()
     {
@@ -153,7 +177,11 @@ public class GameManager : MonoBehaviour
         if (moveRoute != null)
         {
             EventMaster.current.ClearingRoute();
-            moveRoute = new Cell[activeUnit.mobility];
+            if (activeUnit != null)
+            {
+                moveRoute = new Cell[activeUnit.mobility];
+            }
+            
         }
         
     }
@@ -230,14 +258,9 @@ public class GameManager : MonoBehaviour
         if (!fightIsOver)
         {
             turnCounter++;
-
-            Debug.Log("Следующий ход: " + turnCounter);
             playerTurn = !playerTurn;
 
             EventMaster.current.TurnChanging(playerTurn);
-
-
-            Debug.Log("Очередь игрока? - " + playerTurn);
 
             if (playerTurn)
             {
@@ -315,8 +338,6 @@ public class GameManager : MonoBehaviour
     {
         possibleMoveCells = gridTable.GetRange(center, moveRadius, false);
         realMoveCells = gridTable.GetRealMoveCells(center, moveRadius);
-
-
     }
 
     public void showActiveCells()
@@ -380,14 +401,6 @@ public class GameManager : MonoBehaviour
         Dictionary<BattleSlot, int> attackers = objData.possibleAttackers;
         if (attackers.Count > 0)
         {
-
-            Debug.Log("Атакующие объекта +" + obj.name);
-
-            foreach (KeyValuePair<BattleSlot, int> item in attackers)
-            {
-                Debug.Log(item.Key.id);
-            }
-
             AttackTarget(objData.obj.id);
             return;
         }
@@ -404,6 +417,11 @@ public class GameManager : MonoBehaviour
             {
                 currentCell.renderSwitch(canMove(currentCell, possibleMoveCells));   
             }
+        }
+
+        if (activeUnit != null && obj.tag.Contains("Unit") && activeUnit.id == obj.GetComponent<Unit>().id)
+        {
+            SetActiveUnit(activeUnit);
         }
     }
 
@@ -445,7 +463,7 @@ public class GameManager : MonoBehaviour
 
         if (existPreview)
         {
-            if (cell.occypier == null)
+            if (landableCells.Contains(cell))
             {
                 EventMaster.current.SpawnUnit(cell, previewId);
 

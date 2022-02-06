@@ -25,6 +25,7 @@ TagManager:
   - GridTable
   - AI
   - BattleManager
+  - LandablePoints
   layers:
   - Default
   - TransparentFX
