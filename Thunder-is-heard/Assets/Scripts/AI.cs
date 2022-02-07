@@ -9,11 +9,8 @@ public class AI : MonoBehaviour
     private int mood;
     private GridTable gridTable;
     private BattleManager battleManager;
-    private TurnData bestMove, currentParentMove;
-    private UnitTable positionInBestMove;
-    private float bestEvaluation, evaluationByCurrentParentMove;
-    private float nearestDistanceToEnemy;
-    private bool stalemate, bestMoveIsAttackingMoving;
+    private TurnData bestMove;
+    private bool stalemate;
 
 
     private void Start()
@@ -44,10 +41,9 @@ public class AI : MonoBehaviour
         //    Debug.Log("Оценка: " + item.Value.positionEvaluation);
         //}
 
-        bestMove = GetBestTurn(AllTurns);
+        bestMove = FindBestMove(AllTurns);
 
         if (bestMove.action == 2 && bestMove.point != null && bestMove.activeUnit != null) bestMove.route = BuildRoute(bestMove.point, bestMove.activeUnit.center, bestMove.activeUnit.mobility);
-
 
         //bestMove = FindBestMoveMain(AllTurns, 0, depth);
 
@@ -91,255 +87,233 @@ public class AI : MonoBehaviour
     }
 
 
-    private TurnData FindBestMoveMain(Dictionary<TurnData, UnitTable> turns, int currentDepth, int depth)
+
+    private TurnData FindBestMove(Dictionary<TurnData, UnitTable> turns)
     {
-            foreach (KeyValuePair<TurnData, UnitTable> item in turns)
-            {
-                currentParentMove = item.Key;
+        Dictionary<TurnData, UnitTable> attackTurns = new Dictionary<TurnData, UnitTable>();
 
+        Dictionary<TurnData, UnitTable> accurateOffensiveTurns = new Dictionary<TurnData, UnitTable>();
 
-                bestMove = FindBestMove(battleManager.GetAllPositionsFromPosition(item.Value), currentDepth, depth);
-            }
+        Dictionary<TurnData, UnitTable> insaneOffensiveTurns = new Dictionary<TurnData, UnitTable>();
 
-        Debug.Log("Найден лучший ход");
-
-        return bestMove;
-    }
-
-
-    private TurnData FindBestMove(Dictionary<TurnData, UnitTable> turns, int currentDepth, int depth)
-    {
-        if (currentDepth > depth)
-        {
-            if (evaluationByCurrentParentMove >= bestEvaluation)
-            {
-                bestEvaluation = evaluationByCurrentParentMove;
-                bestMove = currentParentMove;
-            }
-        }
-
-        else
-        {
-                foreach (KeyValuePair<TurnData, UnitTable> item in turns)
-                {
-                    evaluationByCurrentParentMove = item.Value.positionEvaluation;
-                    FindBestMove(battleManager.GetAllPositionsFromPosition(item.Value), currentDepth++, depth);
-                }
-            
-        }
-
-        Debug.Log("Возможный лучший ход возвращается");
-
-        return bestMove;
-    }
-
-
-    private TurnData GetBestTurn(Dictionary<TurnData, UnitTable> turns)
-    {
-        bestEvaluation = 9999 * AISide;
-        nearestDistanceToEnemy = 9999;
-
-        bestMove = new TurnData(0);
-        positionInBestMove = battleManager.currentPosition;
-
-        stalemate = bestMoveIsAttackingMoving = false;
+        Dictionary<TurnData, UnitTable> moveTurns = new Dictionary<TurnData, UnitTable>();
 
         foreach (KeyValuePair<TurnData, UnitTable> item in turns)
         {
-
-            TurnData currentTurn = item.Key;
-            UnitTable currentPosition = item.Value;
-
-            if (currentTurn.action == 1)
-            {
-                AttackTurnHandle(currentTurn, currentPosition);
-            }
-            else if (currentTurn.action == 2)
-            {
-                if (bestMove.action != 1)
-                {
-                    MoveTurnHandle(currentTurn, currentPosition);
-                }
-
-                stalemate = CheckForStalemate(positionInBestMove, positionInBestMove.enemyUnitTag);
-            }
-        }
-        return bestMove;
-    }
-
-
-    private void AttackTurnHandle(TurnData turn, UnitTable position)
-    {
-        if (!position.attackersInfo.ContainsKey(turn.target.id))
-        {
-            SetTurnAsBest(turn, position, true);
-        }
-        else
-        {
-            if (bestMove.action == 1)
-            {
-                if (!positionInBestMove.attackersInfo.ContainsKey(bestMove.target.id))
-                {
-                }
-                else if (positionInBestMove.attackersInfo[bestMove.target.id].possibleUnitTargets.Count > position.attackersInfo[turn.target.id].possibleUnitTargets.Count || positionInBestMove.attackersInfo[bestMove.target.id].outputDamage > position.attackersInfo[turn.target.id].outputDamage)
-                {
-                }
-                else
-                {
-                    SetTurnAsBest(turn, position, true);
-                }
-            }
+            if (item.Key.action == 1) attackTurns.Add(item.Key, item.Value);
             else
             {
-                SetTurnAsBest(turn, position, true);
-            }
-        }
-    }
+                TurnData currentTurn = item.Key;
+                UnitTable currentPosition = item.Value;
 
+                AttackersData activeUnitDataCurrent = currentPosition.attackersInfo[currentTurn.activeUnit.id];
+                AttackersData activeUnitDataInRealPosition = battleManager.currentPosition.attackersInfo[currentTurn.activeUnit.id];
 
-    private void MoveTurnHandle(TurnData turn, UnitTable position)
-    {
-
-        AttackersData activeUnitDataCurrent = position.attackersInfo[turn.activeUnit.id];
-        AttackersData activeUnitDataInBestMove = positionInBestMove.attackersInfo[turn.activeUnit.id];
-
-        if (activeUnitDataCurrent.possibleUnitTargets.Count > activeUnitDataInBestMove.possibleUnitTargets.Count)
-        {
-
-            if (activeUnitDataCurrent.inputDamage == 0 || activeUnitDataCurrent.obj.health > activeUnitDataCurrent.inputDamage || stalemate)
-            {
-
-                if (bestMove.action != 1 || !bestMoveIsAttackingMoving)
+                if (activeUnitDataCurrent.possibleUnitTargets.Count > activeUnitDataInRealPosition.possibleUnitTargets.Count)
                 {
-
-                        SetTurnAsBest(turn, position, true);
-                    
-                    
-                }
-
-            }
-   
-            else
-            {
-                int currentPositionInputDamage = battleManager.currentPosition.attackersInfo[activeUnitDataCurrent.obj.id].inputDamage;
-                if (currentPositionInputDamage > 0)
-                {
-                    if (positionInBestMove.attackersInfo[activeUnitDataCurrent.obj.id].inputDamage >= currentPositionInputDamage)
+                    if (activeUnitDataCurrent.inputDamage == 0 || activeUnitDataCurrent.obj.health > activeUnitDataCurrent.inputDamage)
                     {
-                        SetTurnAsBest(turn, position, true);
-                    }
-                }
-            }
-
-
-        }
-        else if (activeUnitDataCurrent.possibleUnitTargets.Count == activeUnitDataInBestMove.possibleUnitTargets.Count)
-        {
-            Debug.Log("В этом ходу цели активного юнита равны целям этого же юнита в лучшем ходе");
-
-            if (!bestMoveIsAttackingMoving)
-            {
-                Debug.Log("Лучший ход не атакующий");
-
-                if (activeUnitDataCurrent.inputDamage < activeUnitDataInBestMove.inputDamage)
-                {
-
-                    Debug.Log("Входной урон в текущем ходу у активного юнита меньше, чем у этого же юнита в лучшем ходе, поэтому текущий ход теперь лучший");
-
-                    SetTurnAsBest(turn, position);
-                }
-                else
-                {
-                    AttackersData currentActiveAttackersData = position.attackersInfo[turn.activeUnit.id];
-
-
-                    Debug.Log("Входной урон в текущем ходу у активного юнита такой же, как у этого же юнита в лучшем ходе");
-
-                    if (bestMove.action == 0 && currentActiveAttackersData.distanceToNearestEnemyUnit < battleManager.currentPosition.attackersInfo[turn.activeUnit.id].distanceToNearestEnemyUnit)
-                    {
-                        Debug.Log("Лучший ход - ожидание + активный юнит становится ближе к цели, значит текущий лучше!");
-
-
-
-                        SetTurnAsBest(turn, position);
+                        accurateOffensiveTurns.Add(currentTurn, currentPosition);
                     }
                     else
                     {
-
-                        Debug.Log("Лучший ход не ожидающий, либо дистанция к цели не уменьшается!");
-
-
-                        float newNearestDistanceToEnemy = currentActiveAttackersData.distanceToNearestEnemyUnit;
-
-                        Debug.Log("Дистанция до юнита в текущем ходе: " + newNearestDistanceToEnemy);
-                        Debug.Log("Ближайшая дистанция: " + nearestDistanceToEnemy);
-
-                        if (newNearestDistanceToEnemy < nearestDistanceToEnemy)
-                        {
-                            Debug.Log("Эта дистанция меньше чем лучшая дистанция в лучшем ходу");
-                            
-                            
-
-                            if (newNearestDistanceToEnemy < positionInBestMove.attackersInfo[turn.activeUnit.id].distanceToNearestEnemyUnit)
-                            {
-                                nearestDistanceToEnemy = newNearestDistanceToEnemy;
-
-                                Debug.Log("Дистанция в текущем ходе меньше чем этого же юнита в лучшем ходе: " + positionInBestMove.attackersInfo[turn.activeUnit.id].distanceToNearestEnemyUnit);
-                                Debug.Log("Этот ход лучший!");
-                                Debug.Log("Предыдущий лучший ход:");
-
-                                ShowTurnInfo(bestMove);
-
-                                SetTurnAsBest(turn, position);
-
-
-
-
-                            }
-                            else
-                            {
-                                Debug.Log("Else!!!!");
-
-                                GameObject obstacle = IsObstacleOnForward(currentActiveAttackersData.nearestUnit.center, turn.activeUnit.center);
-                                if (obstacle != null)
-                                {
-                                    Debug.Log("Point = " + currentActiveAttackersData.nearestUnit.center);
-
-                                    Cell point = gridTable.getCellInfoByPose(currentActiveAttackersData.nearestUnit.center);
-
-                                    Debug.Log("pointCELL = " + point.cellPose);
-
-                                    Cell[] shortestRoute = BuildRoute(gridTable.getCellInfoByPose(currentActiveAttackersData.nearestUnit.center), battleManager.currentPosition.attackersInfo[turn.activeUnit.id].obj.center, Mathf.Max(gridTable._gridSize.x, gridTable._gridSize.y), currentActiveAttackersData.nearestUnit.tag);
-
-
-                                    Debug.Log("Лучшая клетка согласно мобильности: " + shortestRoute[turn.activeUnit.mobility - 1].cellPose);
-                                    Debug.Log("А в текущем ходу клетка для передвижения " + turn.point.cellPose);
-
-
-                                    if (turn.point.cellPose == shortestRoute[turn.activeUnit.mobility - 1].cellPose && !bestMoveIsAttackingMoving)
-                                    {
-                                        Debug.Log("Клетка в ходу является лучшей клеткой согласно кротчайшему маршруту!!! Ход лучший");
-
-                                        nearestDistanceToEnemy = newNearestDistanceToEnemy;
-                                        SetTurnAsBest(turn, position);
-                                    }
-                                }
-                            }
-
-
-                        }
-                        else
-                        {
-                            Debug.Log("Новая дистанция не меньше чем установленна ближайшая: " + nearestDistanceToEnemy + " поэтому ход не будет избран!");
-                        }
-
-                        
+                        insaneOffensiveTurns.Add(currentTurn, currentPosition);
                     }
+                }
+                else
+                {
+                    moveTurns.Add(currentTurn, currentPosition);
+                }
 
+            }
+        }
+
+        if (attackTurns.Count > 0) return ChooseBestAttack(attackTurns);
+
+        if (accurateOffensiveTurns.Count > 0) return ChooseBestOffensive(accurateOffensiveTurns);
+
+        stalemate = CheckForStalemate(battleManager.currentPosition, battleManager.currentPosition.enemyUnitTag);
+        if (insaneOffensiveTurns.Count > 0)
+        {
+            if (stalemate || moveTurns.Count == 0) return ChooseBestOffensive(insaneOffensiveTurns);
+        }
+        if (moveTurns.Count > 0) return ChooseBestMoveTurn(moveTurns);
+        else { return new TurnData(0); }
+    }
+
+    
+    private TurnData ChooseBestMoveTurn(Dictionary<TurnData, UnitTable> turns)
+    {
+        Dictionary<int, TurnData> turnTable = new Dictionary<int, TurnData>();
+        Dictionary<int, float> distanceTable = new Dictionary<int, float>();
+
+        foreach (KeyValuePair<TurnData, UnitTable> item in turns)
+        {
+            BattleSlot activeUnit = item.Key.activeUnit;
+            if (!distanceTable.ContainsKey(activeUnit.id))
+            {
+
+                float currentActiveUnitDistance = battleManager.currentPosition.attackersInfo[activeUnit.id].distanceToNearestEnemyUnit;
+
+                distanceTable.Add(activeUnit.id, currentActiveUnitDistance);
+
+                turnTable.Add(activeUnit.id, FindBestConvergenceTurn(activeUnit, turns));
+            }
+        }
+
+
+        int unitCount = distanceTable.Count;
+        for (int index = 0; index < unitCount; index++)
+        {
+            int nearestUnitId = FindNearestDistance(distanceTable);
+            TurnData currentTurn = turnTable[nearestUnitId];
+            if (currentTurn != null) return currentTurn;
+            distanceTable.Remove(nearestUnitId);
+        }
+        return new TurnData(0);
+    }
+
+
+
+    private int FindNearestDistance(Dictionary<int, float> table)
+    {
+        int nearestKey = 9999;
+        float nearestDistance = 9999;
+
+        foreach (KeyValuePair<int, float> item in table)
+        {
+            if (nearestDistance > item.Value)
+            {
+                nearestKey = item.Key;
+                nearestDistance = item.Value;
+            }
+        }
+        return nearestKey;
+    }
+
+
+
+    private TurnData FindBestConvergenceTurn(BattleSlot activeUnit, Dictionary<TurnData, UnitTable> turns)
+    {
+        TurnData bestTurn = null;
+
+        AttackersData attackersData = battleManager.currentPosition.attackersInfo[activeUnit.id];
+
+        float bestDistance = attackersData.distanceToNearestEnemyUnit;
+
+        foreach (KeyValuePair<TurnData, UnitTable> item in turns)
+        {
+            if (item.Key.activeUnit.id == activeUnit.id)
+            {
+                float currentDistance = item.Value.attackersInfo[activeUnit.id].distanceToNearestEnemyUnit;
+                if (bestDistance > currentDistance)
+                {
+                    bestTurn = item.Key;
+                    bestDistance = currentDistance;
                 }
             }
-            
         }
+
+        if (bestTurn == null)
+        {
+            GameObject obstacle = IsObstacleOnForward(attackersData.nearestUnit.center, attackersData.obj.center);
+            if (obstacle != null)
+            {
+                Cell[] shortestRoute = BuildRoute(gridTable.getCellInfoByPose(attackersData.nearestUnit.center), attackersData.obj.center, Mathf.Max(gridTable._gridSize.x, gridTable._gridSize.y), attackersData.nearestUnit.tag);
+
+                foreach (KeyValuePair<TurnData, UnitTable> item in turns)
+                {
+                    if (item.Key.activeUnit.id == activeUnit.id && item.Key.point.cellPose == shortestRoute[activeUnit.mobility - 1].cellPose) return item.Key;
+                }
+            }
+        }
+        return bestTurn;
+    }
+
+
+    private TurnData ChooseBestOffensive(Dictionary<TurnData, UnitTable> turns)
+    {
+        TurnData bestOffensive = null;
+        int bestInputDamage = 9999;
+
+        foreach (KeyValuePair<TurnData, UnitTable> item in turns)
+        {
+            TurnData currentTurn = item.Key;
+            UnitTable currentPosition = item.Value;
+
+            AttackersData activeUnitDataCurrent = currentPosition.attackersInfo[currentTurn.activeUnit.id];
+            
+
+            if (bestInputDamage > activeUnitDataCurrent.inputDamage)
+            {
+                bestOffensive = currentTurn;
+                bestInputDamage = activeUnitDataCurrent.inputDamage;
+            }
+
+        }
+        return bestOffensive;
+
+    }
+
+    private TurnData ChooseBestAttack(Dictionary<TurnData, UnitTable> turns)
+    {
+        TurnData bestAttack = null;
+        float turnEvaluation = 0;
+        bool isLethalAttack = false;
+
+        foreach (KeyValuePair<TurnData, UnitTable> item in turns)
+        {
+            TurnData currentTurn = item.Key;
+            UnitTable currentPosition = item.Value;
+
+            float targetEvaluation = battleManager.currentPosition.attackersInfo[currentTurn.target.id].evaluation;
+
+            if (!currentPosition.attackersInfo.ContainsKey(currentTurn.target.id))
+            {
+                if (!isLethalAttack)
+                {
+                    isLethalAttack = true;
+                    bestAttack = currentTurn;
+                    turnEvaluation = targetEvaluation;
+                }
+                else
+                {
+                    if (turnEvaluation == 0)
+                    {
+                        bestAttack = currentTurn;
+                        turnEvaluation = targetEvaluation;
+                    }
+                    else
+                    {
+                        if (targetEvaluation > turnEvaluation)
+                        {
+                            bestAttack = currentTurn;
+                            turnEvaluation = targetEvaluation;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (!isLethalAttack)
+                {
+                    if (turnEvaluation == 0)
+                    {
+                        bestAttack = currentTurn;
+                        turnEvaluation = targetEvaluation;
+                    }
+                    else
+                    {
+                        if (targetEvaluation > turnEvaluation)
+                        {
+                            bestAttack = currentTurn;
+                            turnEvaluation = targetEvaluation;
+                        }
+                    }
+                }
+            }
+        }
+        return bestAttack;
     }
 
 
@@ -364,127 +338,6 @@ public class AI : MonoBehaviour
         if (target == currentPoint) step = 0;
         return step;
     }
-
-
-    private void FindWayOutOfObstacle(Vector3 target, Vector3 currentPoint, GameObject obstacle)
-    {
-        Cell shortestWayOut;
-        float shortestDistance = 9999;
-
-
-    }
-
-
-    private void FindNeighbourObstacle(GameObject obstacle)
-    {
-        Vector3[] occypiedCells;
-        Vector3 center;
-        int sizeX, sizeZ;
-        if (obstacle.tag.Contains("Build"))
-        {
-            Destructible obstacleClass = obstacle.GetComponent<Destructible>();
-            occypiedCells = obstacleClass.occypiedPoses;
-            center = obstacleClass.center;
-            sizeX = obstacleClass.sizeX;
-            sizeZ = obstacleClass.sizeZ;
-        }
-        else
-        {
-            Indestructible obstacleClass = obstacle.GetComponent<Indestructible>();
-            occypiedCells = obstacleClass.occypiedPoses;
-            center = obstacleClass.center;
-            sizeX = obstacleClass.sizeX;
-            sizeZ = obstacleClass.sizeZ;
-        }
-
-        Vector3[] aroundCells = GetAroundArea(obstacle.transform, occypiedCells, center, sizeX, sizeZ);
-
-        for (int index = 0; index < aroundCells.Length; index++)
-        {
-            Debug.Log(aroundCells[index]);
-        }
-    }
-
-
-    
-    private Vector3[] GetAroundArea(Transform obj, Vector3[] cells, Vector3 center, int sizeX, int sizeZ)
-    {
-        Vector3[] aroundCells = new Vector3[((sizeX * 2) + (sizeZ * 2)) + 4];
-        int stepByX = 0;
-        int stepByZ = 0;
-        if (transform.forward.x != 0) stepByX = (int)transform.forward.x;
-        else if (transform.right.x != 0) stepByX = (int)transform.right.x;
-
-        if (transform.right.z != 0) stepByZ = (int)transform.right.z;
-        else if (transform.forward.z != 0) stepByZ = (int)transform.forward.z;
-
-        int newMaxX = (int)obj.transform.position.x + (stepByX * (sizeX + 1));
-        int newMaxZ = (int)obj.transform.position.z + (stepByZ * (sizeZ + 1));
-
-        Vector3 newStartPoint = new Vector3(obj.transform.position.x - stepByX, obj.transform.position.y, obj.transform.position.z - stepByZ);
-
-        int aroundCellsIndex = 0;
-
-
-            for (int x = (int)newStartPoint.x; x != newMaxX; x += stepByX)
-            {
-                Debug.Log("Первый цикл");
-                aroundCells[aroundCellsIndex] = new Vector3(x, newStartPoint.y, newStartPoint.z);
-
-                Debug.Log("Добавлена клетка " + aroundCells[aroundCellsIndex]);
-
-                aroundCellsIndex++;
-
-                Debug.Log("новый индекс = " + aroundCellsIndex);
-
-            }
-            for (int z = (int)newStartPoint.z + stepByZ; z != newMaxZ; z += stepByZ)
-            {
-                Debug.Log("Второй цикл");
-
-                aroundCells[aroundCellsIndex] = new Vector3(newStartPoint.x, newStartPoint.y, z);
-
-                Debug.Log("Добавлена клетка " + aroundCells[aroundCellsIndex]);
-
-
-                aroundCellsIndex++;
-
-
-                Debug.Log("новый индекс = " + aroundCellsIndex);
-
-            }
-            for (int z = (int)newStartPoint.z + stepByZ; z != newMaxZ; z += stepByZ)
-            {
-                Debug.Log("Третий цикл");
-
-                aroundCells[aroundCellsIndex] = new Vector3(newMaxX - stepByX, newStartPoint.y, z);
-
-                Debug.Log("Добавлена клетка " + aroundCells[aroundCellsIndex]);
-
-                aroundCellsIndex++;
-
-                Debug.Log("новый индекс = " + aroundCellsIndex);
-
-            }
-            for (int x = (int)newStartPoint.x + stepByX; x != newMaxX - stepByX; x += stepByX)
-            {
-                Debug.Log("Четвертый цикл");
-
-                aroundCells[aroundCellsIndex] = new Vector3(x, newStartPoint.y, newMaxZ - stepByZ);
-
-
-                Debug.Log("Добавлена клетка " + aroundCells[aroundCellsIndex]);
-
-                aroundCellsIndex++;
-
-                Debug.Log("новый индекс = " + aroundCellsIndex);
-
-            }
-
-
-        return aroundCells;
-
-    }
  
 
     private void ShowTurnInfo(TurnData turn)
@@ -505,60 +358,6 @@ public class AI : MonoBehaviour
     }
 
 
-    private bool IsUnitOnEdge(BattleSlot unit, UnitTable position)
-    {
-        Debug.Log("Проверяется на грани юнит " + unit.id);
-
-        Debug.Log("Его центр " + unit.center);
-
-        Cell[] unitEdgeCells = gridTable.GetRange(unit.center, 1, false);
-
-        for (int index = 0; index < unitEdgeCells.Length; index++)
-        {
-            if (unitEdgeCells[index] != null) Debug.Log("Крайние клетки: " + unitEdgeCells[index].cellPose);
-
-        }
-
-        foreach (BattleSlot enemy in position.collections[position.GetEnemyUnitTagByTag(unit.tag)])
-        {
-
-            Debug.Log("Возможный атакующий: " + enemy.id);
-            Debug.Log("Позиция атакующего: " + enemy.center);
-
-            Cell[] enemyBlustCells = gridTable.GetRange(enemy.center, enemy.distance, true);
-
-            for (int index = 0; index < enemyBlustCells.Length; index++)
-            {
-                if (enemyBlustCells[index] != null) Debug.Log("Атакующая клетка: " + enemyBlustCells[index].cellPose);
-
-            }
-
-
-            IEnumerable<Cell> intersectRes = enemyBlustCells.Intersect(unitEdgeCells);
-
-            foreach (Cell cell in intersectRes)
-            {
-                if (cell != null)
-                {
-                    Debug.Log("пересечение в клетке " + cell.cellPose);
-                    return true;
-                }
-                    
-            }
-        }
-        return false;
-    }
-
-    private void SetTurnAsBest(TurnData turn, UnitTable turnPosition, bool attackingMove = false)
-    {
-        positionInBestMove = turnPosition;
-        bestMove = turn;
-        bestEvaluation = positionInBestMove.positionEvaluation * AISide;
-        bestMoveIsAttackingMoving = attackingMove;
-        if (turn.action == 2) nearestDistanceToEnemy = positionInBestMove.attackersInfo[turn.activeUnit.id].distanceToNearestEnemyUnit;
-    }
-
-
     private bool CheckForStalemate(UnitTable position, string unitTag)
     {
         if (position.collections[unitTag].Count() < 2) return true;
@@ -575,16 +374,6 @@ public class AI : MonoBehaviour
         return true;
     }
 
-
-    private TurnData GetFirstTurn(Dictionary<TurnData, UnitTable> turns)
-    {
-        TurnData turn = new TurnData(0);
-        foreach (KeyValuePair<TurnData, UnitTable> item in turns)
-        {
-            return item.Key;
-        }
-        return turn;
-    }
 
 }
 public class TurnData
