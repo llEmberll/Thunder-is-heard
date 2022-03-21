@@ -1,0 +1,211 @@
+fileFormatVersion: 2
+guid: 3b9a4c11c2514be48ac05a08f0d19191
+ModelImporter:
+  serializedVersion: 20200
+  internalIDToNameTable:
+  - first:
+      74: -131517424269742242
+    second: CylinderAction
+  - first:
+      74: 7176209919637214875
+    second: Action
+  - first:
+      74: -3419257869308726280
+    second: walk
+  - first:
+      74: 2260849227674764739
+    second: walking2
+  - first:
+      74: 665853745831072719
+    second: idle2
+  - first:
+      74: -6645628152415671225
+    second: Circle.002|Action
+  - first:
+      74: -766760917772151412
+    second: Circle.002|CylinderAction
+  - first:
+      74: -507979935918129295
+    second: Circle.002|CylinderAction.001
+  - first:
+      74: 7017909583901457168
+    second: Circle.002|CylinderAction.002
+  - first:
+      74: -7979018953596489212
+    second: Circle.002|idle2
+  - first:
+      74: 3379349068923590251
+    second: Circle.002|walk
+  - first:
+      74: 8468079380293682854
+    second: Circle.002|walk1
+  - first:
+      74: -4453903156241915853
+    second: Circle.002|walk1.001
+  - first:
+      74: -8418596067014120932
+    second: Circle.002|walk1.002
+  - first:
+      74: 1756014603766787855
+    second: Circle.002|walking2
+  - first:
+      74: 885944232402757753
+    second: Armature|Action
+  - first:
+      74: 271997525282036724
+    second: Armature|CylinderAction
+  - first:
+      74: 2986386761548156804
+    second: Armature|CylinderAction.001
+  - first:
+      74: -3816247861298375671
+    second: Armature|CylinderAction.002
+  - first:
+      74: 5866576275671282845
+    second: Armature|death
+  - first:
+      74: 6958968346802185837
+    second: Armature|idle2
+  - first:
+      74: -5801855476567878859
+    second: Armature|shot
+  - first:
+      74: -4799524434163024911
+    second: Armature|walk
+  - first:
+      74: 8849868817492384701
+    second: Armature|walk1
+  - first:
+      74: 6279034237370975332
+    second: Armature|walk1.001
+  - first:
+      74: 1222172424837141164
+    second: Armature|walk1.002
+  - first:
+      74: -1003470754908075324
+    second: Armature|walk_1
+  - first:
+      74: 6658933258057631272
+    second: Armature|walking2
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material
+    second: {fileID: 2100000, guid: e91ccf336934e474da901ab266ce823a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: armor
+    second: {fileID: 2100000, guid: 8f212c0855d43754e915605ec14c668f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: cam_base
+    second: {fileID: 2100000, guid: 75fba25c2c1e6934a8781a32a42ff6ff, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: light_yellow
+    second: {fileID: 2100000, guid: 6ec9b8192ef17d144a44ce8875d10ae5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: trucks
+    second: {fileID: 2100000, guid: acd2105ddde48c043a7b5a13577ced6a, type: 2}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

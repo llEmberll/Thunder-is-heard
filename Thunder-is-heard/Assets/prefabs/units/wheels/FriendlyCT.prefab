@@ -31,7 +31,6 @@ GameObject:
   - component: {fileID: 291118933852615868}
   - component: {fileID: 291118933852615843}
   - component: {fileID: 291118933852615842}
-  - component: {fileID: 291118933852615841}
   m_Layer: 0
   m_Name: FriendlyCT
   m_TagString: FriendlyUnit
@@ -48,7 +47,7 @@ Transform:
   m_GameObject: {fileID: 291118933852615840}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 0.1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.08, z: 0.8}
   m_Children:
   - {fileID: 664727377621096218}
   - {fileID: 7057256912830954318}
@@ -132,19 +131,6 @@ MonoBehaviour:
   unitId: 0
   model: {fileID: 664727377621096218}
   animator: {fileID: 0}
---- !u!65 &291118933852615841
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 291118933852615840}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.57580173, y: 5.319717, z: 0.845273}
-  m_Center: {x: 0.015207946, y: 2.159859, z: 0.0209741}
 --- !u!95 &8705720444603382992
 Animator:
   serializedVersion: 3
