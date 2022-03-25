@@ -20,6 +20,8 @@ public class PlayerData : MonoBehaviour
     {
         units.Add(0, 2);
         units.Add(1, 3);
+        units.Add(2, 1);
+        units.Add(3, 2);
 
     }
 

@@ -463,7 +463,7 @@ public class GameManager : MonoBehaviour
 
         if (existPreview)
         {
-            if (landableCells.Contains(cell))
+            if (landableCells.Contains(cell) && cell.occypier == null)
             {
                 EventMaster.current.SpawnUnit(cell, previewId);
 

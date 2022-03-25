@@ -7,9 +7,15 @@ public class Prefabs : MonoBehaviour
 
     [SerializeField] private GameObject CT;
     [SerializeField] private GameObject lis;
+    [SerializeField] private GameObject newCT;
+    [SerializeField] private GameObject humveee;
+    [SerializeField] private GameObject HT;
 
     [SerializeField] private Sprite CTImage;
     [SerializeField] private Sprite lisImage;
+    [SerializeField] private Sprite newCTImage;
+    [SerializeField] private Sprite humveeImage;
+    [SerializeField] private GameObject HTImage;
 
     private Dictionary<int, UnitData> units = new Dictionary<int, UnitData>();
 
@@ -21,6 +27,8 @@ public class Prefabs : MonoBehaviour
         currentIdKey = 0;
         AddUnit(lis, currentIdKey, lisImage);
         AddUnit(CT, currentIdKey, CTImage);
+        AddUnit(newCT, currentIdKey, newCTImage);
+        AddUnit(humveee, currentIdKey, humveeImage);
     }
 
     
