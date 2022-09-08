@@ -5,13 +5,14 @@ using UnityEngine;
 public class PlayerData : MonoBehaviour
 {
     public Dictionary<int, int> units = new Dictionary<int, int>();
+    public Dictionary<int, int> builds = new Dictionary<int, int>();
     private Prefabs dataBase;
 
     private void Awake()
     {
         EventMaster.current.UnitAddedToPlayer += AddUnit;
         EventMaster.current.UnitDeletedFromPlayer += DeleteUnit;
-        EventMaster.current.UnitStatusChanged += ChangeUnitStatus;
+
 
         dataBase = GameObject.FindGameObjectWithTag("Prefabs").GetComponent<Prefabs>();
     }
@@ -23,6 +24,8 @@ public class PlayerData : MonoBehaviour
         units.Add(2, 1);
         units.Add(3, 2);
 
+        builds.Add(0, 2);
+        builds.Add(1, 2);
     }
 
     private void AddUnit(int unitId, int count)
@@ -36,10 +39,15 @@ public class PlayerData : MonoBehaviour
         else units[unitId] -= count;
     }
 
-    private void ChangeUnitStatus(int unitId, bool status) 
+    private void AddBuild(int buildId, int count)
     {
-
+        builds.Add(buildId, count);
     }
 
+    private void DeleteBuild(int buildId, int count)
+    {
+        if (count >= builds[buildId]) builds.Remove(buildId);
+        else builds[buildId] -= count;
+    }
 
 }

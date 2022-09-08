@@ -203,4 +203,11 @@ public class EventMaster : MonoBehaviour
         ObjectChangedHealth?.Invoke(obj, newHealth);
     }
 
+
+    public event Action ItemsDeleted;
+    public void DeleteItems()
+    {
+        ItemsDeleted?.Invoke();
+    }
+
 }

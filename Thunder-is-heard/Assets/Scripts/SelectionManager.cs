@@ -412,7 +412,7 @@ public class SelectionManager : MonoBehaviour
 
         health.enabled = true;
         health.gameObject.SetActive(true);
-        healthCount.text = $"{obj.maxHealth}";
+        healthCount.text = $"{obj.health}";
     }
 
 

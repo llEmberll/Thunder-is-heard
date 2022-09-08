@@ -6,7 +6,7 @@ public class LandableUnit : MonoBehaviour, IPointerEnterHandler
 {
     public int buttonId, previewId, count;
 
-    public string Health, Damage, Distance, Mobility;
+    public string health, damage, distance, mobility;
 
     public Text UIHealth, UIDamage, UIDistance, UIMobility, countText;
 
@@ -14,6 +14,7 @@ public class LandableUnit : MonoBehaviour, IPointerEnterHandler
 
     private void Awake()
     {
+        EventMaster.current.ItemsDeleted += Delete;
         EventMaster.current.FightIsStarted += StartFight;
         EventMaster.current.SpawnedUnit += ChangeCount;
     }
@@ -50,7 +51,18 @@ public class LandableUnit : MonoBehaviour, IPointerEnterHandler
 
     public void OnPointerEnter(PointerEventData data)
     {
-        UIHealth.text = Health; UIDamage.text = Damage; UIDistance.text = Distance; UIMobility.text = Mobility;
+        
+        //UIHealth.text = health; UIDamage.text = damage; UIDistance.text = distance; UIMobility.text = mobility;
+    }
+
+    private void Delete()
+    {
+        Debug.Log("Landable Unit deleted");
+
+        EventMaster.current.ItemsDeleted -= Delete;
+        EventMaster.current.SpawnedUnit -= ChangeCount;
+
+        Destroy(this.gameObject);
     }
 
 }

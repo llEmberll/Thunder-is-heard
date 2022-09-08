@@ -26,6 +26,7 @@ TagManager:
   - AI
   - BattleManager
   - LandablePoints
+  - LandableBuild
   layers:
   - Default
   - TransparentFX

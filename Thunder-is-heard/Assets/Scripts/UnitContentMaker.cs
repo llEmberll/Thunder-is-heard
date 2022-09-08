@@ -56,7 +56,7 @@ public class UnitContentMaker : MonoBehaviour
         instanceClass.buttonId = elementsCount;
         instanceClass.previewId = unitData.id;
 
-        instanceClass.Health = $"{unitData.maxHealth}"; instanceClass.Damage = $"{unitData.damage}"; instanceClass.Distance = $"{unitData.distance}"; instanceClass.Mobility = $"{unitData.mobility}";
+        instanceClass.health = $"{unitData.maxHealth}"; instanceClass.damage = $"{unitData.damage}"; instanceClass.distance = $"{unitData.distance}"; instanceClass.mobility = $"{unitData.mobility}";
 
         instanceClass.UIHealth = health;
         instanceClass.UIDamage = damage;
